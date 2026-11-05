@@ -1,0 +1,6 @@
+__pycache__/
+.DS_Store
+tools/
+README.md
+assets/scenes/title.png
+assets/scenes/title_m.png
