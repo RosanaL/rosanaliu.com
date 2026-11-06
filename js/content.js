@@ -160,36 +160,6 @@ const ITEMS = [
     stack: ["Python", "OpenAI", "pytest"],
     links: [],
   },
-  {
-    id: "student-grade", zone: "ml", rarity: "study", x: 470, y: 1080, art: "grade",
-    title: { en: "Student Grade Prediction", zh: "学生成绩预测" },
-    flavor: { en: "Can your comments predict a passing grade?", zh: "你写的评论能预测你及不及格吗？" },
-    summary: {
-      en: "Predicts whether a student will score 70 or above from behavior alone: questions asked, answers given, accuracy and comments written.",
-      zh: "只看学习行为（提问数、答题数、正确率、评论数），预测学生能否考到 70 分以上。",
-    },
-    did: {
-      en: ["Compared SVM, random forest, GBM, KNN, DNN, MLP and LSTM on the same task", "Evaluated with precision, recall, specificity, ROC AUC and confusion matrices"],
-      zh: ["在同一任务上对比 SVM、随机森林、GBM、KNN、DNN、MLP 和 LSTM", "用精确率、召回率、特异度、ROC AUC 和混淆矩阵评估"],
-    },
-    stack: ["Python", "scikit-learn"],
-    links: [{ label: "GitHub", url: "https://github.com/RosanaL/Student-Grade-Prediction" }],
-  },
-  {
-    id: "morel", zone: "ml", rarity: "study", x: 710, y: 1090, art: "morel",
-    title: { en: "Wild Morel Yield", zh: "野生羊肚菌产量" },
-    flavor: { en: "Forecasting mushrooms from the weather.", zh: "看天气，算蘑菇。" },
-    summary: {
-      en: "Forecasts wild morel yield from regional weather, so a buyer can plan purchasing and inventory ahead of the harvest.",
-      zh: "根据当地天气预测野生羊肚菌产量，让采购方能提前安排采购和库存。",
-    },
-    did: {
-      en: ["Scraped yield records from an official agricultural statistics site and matched them to local weather", "Compared random forest, SVM, GBM, MLP and LSTM models"],
-      zh: ["从官方农业统计网站爬取产量数据，并与当地天气匹配", "对比随机森林、SVM、GBM、MLP 和 LSTM 模型"],
-    },
-    stack: ["Python", "Scraping", "LSTM"],
-    links: [{ label: "GitHub", url: "https://github.com/RosanaL/Agricultural-Product-Yield-Prediction-Project" }],
-  },
 
   /* ───────── Aesthetic ───────── */
   {

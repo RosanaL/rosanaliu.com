@@ -45,26 +45,6 @@ const CASES = [
       { spot: "voice", label: { en: "Console", zh: "中控台" }, did: 2, line: { en: "The waveform on the console keeps moving. Beside it, a small switch: ADVISORY.", zh: "中控台上的声波还在跳。旁边有个小开关：ADVISORY。" } },
     ],
   },
-  {
-    id: "student-grade", scene: "classroom", time: "21:15",
-    place: { en: "An empty classroom", zh: "空教室" },
-    open: { en: ["Nobody has wiped the board. The question at the top is still there: score at least seventy?"], zh: ["黑板没人擦。最上面的问题还在：能考到 70 分吗？"] },
-    clues: [
-      { spot: "models", label: { en: "Model names", zh: "模型名单" }, did: 0, line: { en: "A list of names in chalk, like a line-up. Every one got the same question.", zh: "粉笔写的一排名字，像一张点名表。它们回答的是同一个问题。" } },
-      { spot: "matrix", label: { en: "The grid", zh: "四格表" }, did: 1, line: { en: "Four boxes and a curve. Whoever drew this wanted more than a single number.", zh: "四个格子和一条曲线。画这个的人，不满足于只看一个数字。" } },
-      { spot: "note", label: { en: "Note on a desk", zh: "课桌上的纸条" }, line: { en: "A note on the front desk: questions asked, answers given, comments written. No name on it.", zh: "第一排课桌上的纸条：提问数、答题数、评论数。没有写名字。" } },
-    ],
-  },
-  {
-    id: "morel", scene: "forest", time: "04:40",
-    place: { en: "A hillside before dawn", zh: "天亮前的山坡" },
-    open: { en: ["Wet needles, cold air. Up here, the weather is the only thing anyone can measure ahead of time."], zh: ["松针湿透，空气很冷。在这儿，能提前量到的只有天气。" ] },
-    clues: [
-      { spot: "records", label: { en: "Crate of records", zh: "一箱记录" }, did: 0, line: { en: "Printouts in a crate. Yield figures on one side, local weather pencilled beside them.", zh: "木箱里的打印纸。一边是产量，旁边用铅笔标着当地天气。" } },
-      { spot: "gauge", label: { en: "Rain gauge", zh: "雨量计" }, did: 1, line: { en: "Five marks scratched into the post, one for each model tried.", zh: "柱子上刻着五道痕，试过一个模型就刻一道。" } },
-      { spot: "morels", label: { en: "Morels", zh: "羊肚菌" }, line: { en: "Honeycomb caps, pushing up through the needles. Someone will want to know how many before the harvest.", zh: "蜂窝状的菌盖从松针里钻出来。采收之前，总有人想知道会有多少。" } },
-    ],
-  },
 
   /* ───────── Aesthetic ───────── */
   {
