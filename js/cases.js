@@ -133,7 +133,7 @@ const CASES = [
     place: { en: "The repair shop", zh: "修理铺" },
     open: { en: ["The only warm room in this city. Old sets on the shelves, and someone who'll pick up the phone."], zh: ["这座城里唯一暖和的房间。架子上摆着旧电视，还有一个会接电话的人。"] },
     clues: [
-      { spot: "sign", label: { en: "The sign", zh: "招牌" }, did: 0, line: { en: "A small square sign with one R on it. It doesn't shout.", zh: "一块小小的方招牌，上面一个 R。它不喊叫。" } },
+      { spot: "sign", label: { en: "The sign", zh: "招牌" }, did: 0, line: { en: "A dark sign: Rosana fixes it. It doesn't shout.", zh: "一块深色招牌：Rosana fixes it。它不喊叫。" } },
       { spot: "clips", label: { en: "Monitor", zh: "监视器" }, did: 1, line: { en: "A whole lesson on tape, and on the monitor, one frame for each swing.", zh: "录像带里是整节课，监视器上是一杆一格。" } },
       { spot: "phone", label: { en: "Telephone", zh: "电话" }, did: 2, line: { en: "The phone on the bench. It's been answered by the same person from the start.", zh: "工作台上的电话。从第一通开始，接的都是同一个人。" } },
     ],
