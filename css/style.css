@@ -16,6 +16,7 @@
   --teal: #44eeee;
   --sodium: #ff9900;
   --warm: #ffee88;
+  --paper: #eeeedd;
   color-scheme: dark;
 }
 * { box-sizing: border-box; margin: 0; }
@@ -130,6 +131,26 @@ noscript { display: block; padding: 16px; }
 .exhibit-go { flex: none; padding: calc(1 * var(--u)) calc(4 * var(--u)); outline: var(--u) solid var(--line2); outline-offset: calc(-1 * var(--u)); overflow-wrap: anywhere; }
 .exhibit-link:hover .exhibit-go, .exhibit-link:focus-visible .exhibit-go { background: var(--line); color: var(--ink); }
 .exhibit-link:focus-visible { outline: none; }
+/* A business card on the desk: paper, a photo clipped on the left. */
+.card {
+  align-self: center; margin-top: calc(10 * var(--u));
+  display: flex; gap: calc(10 * var(--u)); align-items: stretch;
+  width: min(100%, calc(372 * var(--u)));
+  padding: calc(8 * var(--u));
+  background: var(--paper); color: var(--navy);
+  outline: var(--u) solid var(--line);
+  box-shadow: calc(4 * var(--u)) calc(4 * var(--u)) 0 var(--ink);
+}
+.card-face { flex: none; width: calc(128 * var(--u)); height: calc(128 * var(--u)); outline: var(--u) solid var(--navy); }
+.card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(2 * var(--u)); }
+.card-kana { color: var(--pink); }
+.card-name { font-weight: normal; font-size: calc(32 * var(--u)); line-height: 1; color: var(--ink); }
+.card-role { color: var(--navy2); border-bottom: var(--u) solid var(--navy2); padding-bottom: calc(3 * var(--u)); }
+.card-line { color: var(--navy); flex: 1; padding-top: calc(2 * var(--u)); }
+.card-tel { color: var(--navy); text-decoration: none; white-space: nowrap; }
+.card-tel i { font-style: normal; color: var(--paper); background: var(--navy); padding: 0 calc(3 * var(--u)); margin-right: calc(4 * var(--u)); }
+a.card-tel:hover, a.card-tel:focus-visible { color: var(--pink); outline: none; }
+.tall .card { flex-direction: column; align-items: center; text-align: center; }
 .tabs { display: flex; gap: calc(4 * var(--u)); margin-bottom: calc(6 * var(--u)); flex-wrap: wrap; }
 .tabs button { padding: 0 calc(8 * var(--u)); outline: var(--u) solid var(--line2); color: var(--line); }
 .tabs button[aria-pressed="true"] { background: var(--line); color: var(--ink); }

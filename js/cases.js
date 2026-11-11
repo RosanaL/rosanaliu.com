@@ -37,6 +37,15 @@ const CASES = [
   },
   {
     id: "hisho", scene: "car", time: "02:06",
+    /* The exhibit is Hisho's business card. Put the number in `tel` when it exists. */
+    card: {
+      avatar: "hisho-avatar",
+      name: { en: "Hisho", zh: "Hisho" },
+      kana: "ヒショ",
+      role: { en: "Voice secretary", zh: "语音秘书" },
+      line: { en: "Answers the phone. Asks before it acts.", zh: "会接电话，先问你再动手。" },
+      tel: "",
+    },
     place: { en: "The expressway", zh: "高速公路上" },
     open: { en: ["Expressway, two in the morning. Rain on the glass. Nobody is touching a phone."], zh: ["凌晨两点的高速。雨打在玻璃上，没有人碰手机。"] },
     clues: [
@@ -251,6 +260,9 @@ const SCRIPT = {
     exhibitTitle: { en: "EXHIBIT", zh: "证物" },
     openExhibit: { en: "Open", zh: "打开" },
     noLink: { en: "No public link for this one yet.", zh: "这件证物暂时没有公开的网址。" },
+    cardTitle: { en: "BUSINESS CARD", zh: "名片" },
+    call: { en: "Call", zh: "拨打" },
+    telSoon: { en: "The number isn't printed yet.", zh: "号码还没印上去。" },
     other: { en: "Also on file", zh: "其他档案" },
     copy: { en: "Copy", zh: "复制" },
     copied: { en: "Copied", zh: "已复制" },
@@ -276,5 +288,17 @@ const SCRIPT = {
     draft: { en: "Not yet. I'm still writing it.", zh: "还没有，我还在写。" },
     note: { en: "It's published. Go and read it.", zh: "已经发了，去读吧。" },
   },
-  zoneTag: { ml: "機械学習", aesthetic: "美学", writing: "文章" },
+  /* The case-file tabs. Each shelf holds the projects of the zones listed. */
+  shelves: {
+    personal: {
+      zones: ["ml", "aesthetic"], tag: "私物",
+      label: { en: "Personal effects", zh: "个人物品" },
+      blurb: { en: "Everything I've made, kept in one drawer.", zh: "我做过的东西，都收在这一个抽屉里。" },
+    },
+    writing: {
+      zones: ["writing"], tag: "文章",
+      label: { en: "Writing", zh: "文章" },
+      blurb: { en: "Notes from building things for real people.", zh: "给真实的人做东西时记下的笔记。" },
+    },
+  },
 };

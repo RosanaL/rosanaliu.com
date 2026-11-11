@@ -12,9 +12,10 @@
     set(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* private window */ } },
   };
   const saved = store.get();
-  const browserZh = (navigator.language || "").toLowerCase().startsWith("zh");
   const S = {
-    lang: saved.lang || (browserZh ? "zh" : "en"),
+    /* English unless the visitor picked a language themselves. */
+    lang: saved.langPicked && saved.lang === "zh" ? "zh" : "en",
+    langPicked: !!saved.langPicked,
     sound: false,
     crt: saved.crt !== false,
     found: saved.found || {},   // case id → list of found clue spots
@@ -24,13 +25,15 @@
     screen: null,
     caseId: null,
     mode: "cmds",
-    tab: "ml",
+    tab: "personal",
   };
-  const persist = () => store.set({ lang: S.lang, crt: S.crt, found: S.found, closed: [...S.closed], egg: [...S.egg], seenPrologue: S.seenPrologue });
+  const persist = () => store.set({ lang: S.lang, langPicked: S.langPicked, crt: S.crt, found: S.found, closed: [...S.closed], egg: [...S.egg], seenPrologue: S.seenPrologue });
   const L = (o) => (o == null ? "" : typeof o === "string" ? o : (o[S.lang] ?? o.en));
   const UI = (k) => L(SCRIPT.ui[k]);
   const ITEM = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
   const CASE = Object.fromEntries(CASES.map((c) => [c.id, c]));
+  const SHELF = SCRIPT.shelves;
+  const shelfOf = (zone) => Object.keys(SHELF).find((k) => SHELF[k].zones.includes(zone)) || "personal";
   const NUM = Object.fromEntries(ITEMS.map((i, n) => [i.id, String(n + 1).padStart(2, "0")]));
   const EGG_SCENES = { office: "m", fortune: "i", gacha: "a1", writing_desk: "t", phone_booth: "a2" };
   const EGG_ORDER = ["m", "i", "a1", "t", "a2"];
@@ -299,7 +302,7 @@
   const linkCmd = (label, url) => {
     const a = el("a", "cmd", `<span>${esc(label)}</span><i>↗</i>`);
     a.href = url;
-    if (!url.startsWith("mailto")) { a.target = "_blank"; a.rel = "noopener"; }
+    if (!/^(mailto|tel):/.test(url)) { a.target = "_blank"; a.rel = "noopener"; }
     return a;
   };
   const verb = (k, fn) => cmdBtn(UI(k), SCRIPT.ui[k].jp, fn);
@@ -318,7 +321,7 @@
   const caseTag = (c) => {
     const closed = S.closed.has(c.id);
     const r = SITE.rarities[c.rarity];
-    return el("div", "case-tag", `${esc(UI("case"))} ${NUM[c.id]} <em>${esc(closed ? UI("closed") : UI("open"))}</em><b>${esc(L(c.title))}</b>${esc(SITE.zones[c.zone].label[S.lang] || SITE.zones[c.zone].label.en)} · ${esc(L(r.label))}`);
+    return el("div", "case-tag", `${esc(UI("case"))} ${NUM[c.id]} <em>${esc(closed ? UI("closed") : UI("open"))}</em><b>${esc(L(c.title))}</b>${esc(L(SHELF[shelfOf(c.zone)].label))} · ${esc(L(r.label))}`);
   };
   const focusFirst = () => { const b = cmdsEl.querySelector("button, a"); if (b && !stage.classList.contains("tall")) b.focus({ preventScroll: true }); };
   const idle = () => { S.mode = "cmds"; renderCmds(); silent(idleText()); focusFirst(); };
@@ -418,32 +421,32 @@
 
   const caseList = (tab) => {
     if (tab) S.tab = tab;
-    const zones = ["ml", "aesthetic", "writing"];
+    if (!SHELF[S.tab]) S.tab = shelfOf(S.tab);
     const wrap = el("div");
-    wrap.append(el("div", "sheet-h", `<b>${esc(UI("cases"))}</b><span>${SCRIPT.zoneTag[S.tab]}</span>`));
+    wrap.append(el("div", "sheet-h", `<b>${esc(UI("cases"))}</b><span>${esc(SHELF[S.tab].tag)}</span>`));
     const tabs = el("div", "tabs");
-    zones.forEach((z) => {
-      const b = el("button", "", esc(SITE.zones[z].label[S.lang] || SITE.zones[z].label.en));
+    Object.keys(SHELF).forEach((z) => {
+      const b = el("button", "", esc(L(SHELF[z].label)));
       b.type = "button"; b.setAttribute("aria-pressed", String(S.tab === z));
       b.addEventListener("click", () => { SFX.pick(); caseList(z); sheet.querySelector(`.tabs button[aria-pressed="true"]`)?.focus(); });
       tabs.append(b);
     });
     wrap.append(tabs);
-    ITEMS.filter((i) => i.zone === S.tab).forEach((i) => {
+    ITEMS.filter((i) => SHELF[S.tab].zones.includes(i.zone)).forEach((i) => {
       const done = S.closed.has(i.id);
       const r = el("button", "row", `<span class="no">${NUM[i.id]}</span><span>${esc(L(i.title))}</span><span class="st${done ? " done" : ""}">${esc(done ? UI("closed") : L(SITE.rarities[i.rarity].label))}</span>`);
       r.type = "button";
       r.addEventListener("click", () => { SFX.open(); openCase(i.id); });
       r.addEventListener("focus", () => silent(L(i.flavor)));
       r.addEventListener("mouseenter", () => silent(L(i.flavor)));
-      r.addEventListener("mouseleave", () => silent(L(SITE.zones[S.tab].blurb)));
+      r.addEventListener("mouseleave", () => silent(L(SHELF[S.tab].blurb)));
       wrap.append(r);
     });
     openSheet(wrap);
     S.mode = "sub";
     cmdSpec = () => [el("div", "hd", esc(UI("casesHint"))), cmdBtn(UI("back"), SCRIPT.ui.back.jp, () => { closeSheet(); office(); })];
     renderCmds();
-    silent(L(SITE.zones[S.tab].blurb));
+    silent(L(SHELF[S.tab].blurb));
     const f = sheet.querySelector(".row");
     if (f && !tab && !stage.classList.contains("tall")) f.focus({ preventScroll: true });
     setHash(S.tab);
@@ -513,7 +516,35 @@
       silent(UI("askHint"));
       focusFirst();
     };
+    const telHref = (t) => "tel:" + t.replace(/[^\d+]/g, "");
+    const card = () => {
+      const k = c.card;
+      const wrap = el("div", "exhibit");
+      wrap.append(el("div", "sheet-h", `<b>${esc(UI("cardTitle"))} · ${esc(L(item.title))}</b><span>${esc(L(SITE.rarities[item.rarity].label))}</span>`));
+      const box = el("div", "card");
+      const face = el("img", "card-face"); face.src = `assets/exhibits/${k.avatar}.png`; face.alt = ""; face.width = 128; face.height = 128;
+      const body = el("div", "card-body",
+        `<span class="card-kana">${esc(k.kana || "")}</span><b class="card-name">${esc(L(k.name))}</b><span class="card-role">${esc(L(k.role))}</span><span class="card-line">${esc(L(k.line))}</span>`);
+      const tel = el(k.tel ? "a" : "span", "card-tel", `<i>TEL</i> ${esc(k.tel || "---- ---- ----")}`);
+      if (k.tel) { tel.href = telHref(k.tel); tel.addEventListener("click", () => SFX.pick()); }
+      body.append(tel);
+      box.append(face, body);
+      wrap.append(box);
+      if (!k.tel) wrap.append(el("p", "sheet-note", esc(UI("telSoon"))));
+      openSheet(wrap);
+      S.mode = "sub";
+      cmdSpec = () => [
+        el("div", "hd", esc(UI("evidence"))),
+        ...(k.tel ? [linkCmd(UI("call"), telHref(k.tel))] : []),
+        ...item.links.map((l) => linkCmd(l.label, l.url)),
+        cmdBtn(UI("back"), SCRIPT.ui.back.jp, () => { closeSheet(); cmdSpec = cmds; idle(); paint(); }),
+      ];
+      renderCmds();
+      silent(L(item.flavor));
+      focusFirst();
+    };
     const evidence = () => {
+      if (c.card) return card();
       const wrap = el("div", "exhibit");
       wrap.append(el("div", "sheet-h", `<b>${esc(UI("exhibitTitle"))} · ${esc(L(item.title))}</b><span>${esc(L(SITE.rarities[item.rarity].label))}</span>`));
       /* The exhibit itself is the link to the work, when the work has somewhere to go. */
@@ -660,7 +691,7 @@
     const items = [
       cmdBtn(L(SCRIPT.menu.begin), "開始", enter(() => office({ prologue: true })), "m0"),
       cmdBtn(L(SCRIPT.menu.resume), "再開", enter(() => office()), "m1" + (hasSave ? "" : " off")),
-      cmdBtn(L(SCRIPT.menu.index), "目次", enter(() => office({ list: "ml" })), "m2"),
+      cmdBtn(L(SCRIPT.menu.index), "目次", enter(() => office({ list: "personal" })), "m2"),
       cmdBtn(L(SCRIPT.menu.options), "設定", () => setOptions(true), "m3"),
     ];
     items[1].disabled = !hasSave;
@@ -675,7 +706,7 @@
     if ($("#front").classList.contains("phone")) return;
     (optionsOpen ? foot.firstChild : items[coverSel]).focus({ preventScroll: true });
   };
-  const btnLang = () => { const b = el("button", "", S.lang === "zh" ? "EN" : "中文"); b.type = "button"; b.setAttribute("aria-label", "Language"); b.addEventListener("click", () => { S.lang = S.lang === "zh" ? "en" : "zh"; persist(); relabel(); }); return b; };
+  const btnLang = () => { const b = el("button", "", S.lang === "zh" ? "EN" : "中文"); b.type = "button"; b.setAttribute("aria-label", "Language"); b.addEventListener("click", () => { S.lang = S.lang === "zh" ? "en" : "zh"; S.langPicked = true; persist(); relabel(); }); return b; };
   const btnSound = () => { const b = el("button", "", `♪ ${UI("sound")} ${S.sound ? UI("on") : UI("off")}`); b.type = "button"; b.addEventListener("click", () => { S.sound = !S.sound; if (S.sound) { startBgm(); SFX.open(); } else stopBgm(); relabel(); }); return b; };
   const btnCrt = () => { const b = el("button", "", `${UI("crt")} ${S.crt ? UI("on") : UI("off")}`); b.type = "button"; b.addEventListener("click", () => { S.crt = !S.crt; stage.classList.toggle("scan", S.crt); persist(); relabel(); }); return b; };
   const goFront = () => {
@@ -747,8 +778,9 @@
   const setHash = (h) => { if (!$("#front").hidden) h = ""; quietHash = true; try { history.replaceState(null, "", h ? "#" + h : location.pathname); } catch { /* sandboxed */ } quietHash = false; };
   const route = (h) => {
     if (CASE[h]) { $("#front").hidden = true; S.seenPrologue = true; openCase(h); return true; }
-    if (["ml", "aesthetic", "writing"].includes(h)) { $("#front").hidden = true; office({ list: h }); return true; }
-    if (h === "work") { $("#front").hidden = true; office({ list: "ml" }); return true; }
+    if (SHELF[h]) { $("#front").hidden = true; office({ list: h }); return true; }
+    /* Older links: the zones that are now one shelf. */
+    if (SITE.zones[h] || h === "work") { $("#front").hidden = true; office({ list: shelfOf(h) }); return true; }
     if (h === "about") { $("#front").hidden = true; about(); return true; }
     if (h === "contact") { $("#front").hidden = true; contact(); return true; }
     return false;
