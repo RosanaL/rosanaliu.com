@@ -9,7 +9,6 @@
   <meta property="og:url" content="https://rosanaliu.com/">
   <meta property="og:title" content="Rosana Liu">
   <meta property="og:description" content="Software, models, and a few cute things people want to keep.">
-  <meta property="og:image" content="https://rosanaliu.com/assets/avatar.png">
   <meta name="twitter:card" content="summary">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,19 +46,31 @@
       padding-left: max(20px, env(safe-area-inset-left, 0px));
       padding-right: max(20px, env(safe-area-inset-right, 0px));
     }
-    main { max-width: 34rem; margin: 0 auto; display: grid; gap: 44px; }
+    main { max-width: 46rem; margin: 0 auto; display: grid; gap: 44px; }
     a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
     .px { font-family: "DotGothic16", ui-monospace, "SF Mono", Menlo, monospace; }
 
     header { display: grid; gap: 18px; }
-    .avatar {
-      width: 96px; height: 96px;
-      image-rendering: pixelated;
-      outline: 1px solid var(--rule);
-      outline-offset: 3px;
-    }
     h1 { font-size: 2.1rem; font-weight: 400; line-height: 1.1; letter-spacing: .01em; }
     .lede { color: var(--muted); max-width: 30rem; text-wrap: pretty; }
+
+    /* Filters on the left, the list on the right. */
+    .board { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: 40px; align-items: start; }
+    .content { display: grid; gap: 44px; min-width: 0; }
+    .filters { position: sticky; top: 32px; display: grid; gap: 6px; }
+    .filters ul { gap: 2px; }
+    .filters li { border: 0; }
+    .filter {
+      width: 100%; display: flex; justify-content: space-between; gap: 12px;
+      padding: 6px 10px; margin: 0 -10px; width: calc(100% + 20px);
+      color: var(--muted); transition: background-color .15s, color .15s;
+    }
+    .filter:hover, .filter:focus-visible { background: var(--hover); color: var(--ink); outline: none; }
+    .filter:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+    .filter[aria-pressed="true"] { color: var(--accent); }
+    .filter[aria-pressed="true"] .label::before { content: "▸ "; }
+    .filter .count { font-size: .8rem; }
 
     section { display: grid; gap: 6px; }
     h2 {
@@ -68,7 +79,7 @@
       padding-bottom: 8px; border-bottom: 1px solid var(--rule);
     }
     ul { list-style: none; padding: 0; display: grid; }
-    li + li { border-top: 1px solid var(--rule); }
+    .list li { border-bottom: 1px solid var(--rule); }
     .link {
       display: grid; grid-template-columns: 1fr auto; gap: 2px 16px;
       align-items: baseline;
@@ -83,43 +94,103 @@
     .mail .where::after { content: " ✉"; }
     .note { grid-column: 1 / -1; color: var(--muted); font-size: .92rem; }
     .link:hover .name, .link:focus-visible .name { color: var(--accent); }
+    .tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .tag {
+      font-size: .72rem; line-height: 1; color: var(--muted);
+      padding: 4px 6px; border: 1px solid var(--rule);
+    }
+    .tag.on { color: var(--accent); border-color: var(--accent); }
 
     footer { color: var(--muted); font-size: .8rem; }
+
+    @media (max-width: 720px) {
+      .board { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+      .filters { position: static; }
+      .filters ul { display: flex; flex-wrap: wrap; gap: 8px; }
+      .filter { width: auto; margin: 0; padding: 5px 10px; border: 1px solid var(--rule); gap: 8px; }
+      .filter[aria-pressed="true"] { border-color: var(--accent); }
+      .filter[aria-pressed="true"] .label::before { content: none; }
+    }
     @media (max-width: 420px) {
       .link { grid-template-columns: 1fr; }
       .where { text-align: left; }
     }
-    @media (prefers-reduced-motion: reduce) { .link { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { .link, .filter { transition: none; } }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <img class="avatar" src="assets/avatar.png" width="160" height="160" alt="Pixel portrait of Rosana">
       <h1 class="px">Rosana Liu</h1>
       <p class="lede">I build software and train models, and I like both better when they have a personality.</p>
     </header>
 
-    <section aria-labelledby="h-projects">
-      <h2 id="h-projects" class="px">Projects</h2>
-      <ul>
-        <li><a class="link" href="https://www.heychirpi.com" target="_blank" rel="noopener"><span class="name">Chirpi</span><span class="where px">heychirpi.com</span><span class="note">Less planning. More playing.</span></a></li>
-        <li><a class="link" href="https://rosanafixes.it" target="_blank" rel="noopener"><span class="name">Rosana Fixes It</span><span class="where px">rosanafixes.it</span><span class="note">I fix the tech, so you can run the business.</span></a></li>
-        <li><a class="link" href="https://wallet-orb.vercel.app" target="_blank" rel="noopener"><span class="name">Wallet Orb</span><span class="where px">wallet-orb.vercel.app</span><span class="note">Person or bot? Ask the orb.</span></a></li>
-        <li><a class="link" href="https://curipo-three.vercel.app" target="_blank" rel="noopener"><span class="name">Curipo</span><span class="where px">curipo-three.vercel.app</span><span class="note">Find your AI crew.</span></a></li>
-      </ul>
-    </section>
+    <div class="board">
+      <nav class="filters" aria-labelledby="h-filter">
+        <h2 id="h-filter" class="px">Filter</h2>
+        <ul>
+          <li><button class="filter px" type="button" data-filter="all" aria-pressed="true"><span class="label">All</span><span class="count"></span></button></li>
+          <li><button class="filter px" type="button" data-filter="agent" aria-pressed="false"><span class="label">AI Agent</span><span class="count"></span></button></li>
+          <li><button class="filter px" type="button" data-filter="ml" aria-pressed="false"><span class="label">Machine Learning</span><span class="count"></span></button></li>
+          <li><button class="filter px" type="button" data-filter="product" aria-pressed="false"><span class="label">Product</span><span class="count"></span></button></li>
+        </ul>
+      </nav>
 
-    <section aria-labelledby="h-elsewhere">
-      <h2 id="h-elsewhere" class="px">Elsewhere</h2>
-      <ul>
-        <li><a class="link" href="https://github.com/RosanaL" target="_blank" rel="noopener"><span class="name">GitHub</span><span class="where px">RosanaL</span></a></li>
-        <li><a class="link" href="https://www.linkedin.com/in/rosana-liu-2a8050228/" target="_blank" rel="noopener"><span class="name">LinkedIn</span><span class="where px">rosana-liu</span></a></li>
-        <li><a class="link mail" href="mailto:ineed@rosanafixes.it"><span class="name">Email</span><span class="where px">ineed@rosanafixes.it</span></a></li>
-      </ul>
-    </section>
+      <div class="content">
+        <section aria-labelledby="h-projects">
+          <h2 id="h-projects" class="px">Projects</h2>
+          <ul class="list" id="projects">
+            <li data-tags="agent product"><a class="link" href="https://www.heychirpi.com" target="_blank" rel="noopener"><span class="name">Chirpi</span><span class="where px">heychirpi.com</span><span class="note">Less planning. More playing.</span><span class="tags"></span></a></li>
+            <li data-tags="product agent"><a class="link" href="https://curipo-three.vercel.app" target="_blank" rel="noopener"><span class="name">Curipo</span><span class="where px">curipo-three.vercel.app</span><span class="note">Find your AI crew.</span><span class="tags"></span></a></li>
+            <li data-tags="ml"><a class="link" href="https://wallet-orb.vercel.app" target="_blank" rel="noopener"><span class="name">Wallet Orb</span><span class="where px">wallet-orb.vercel.app</span><span class="note">Person or bot? Ask the orb.</span><span class="tags"></span></a></li>
+            <li data-tags="product"><a class="link" href="https://rosanafixes.it" target="_blank" rel="noopener"><span class="name">Rosana Fixes It</span><span class="where px">rosanafixes.it</span><span class="note">I fix the tech, so you can run the business.</span><span class="tags"></span></a></li>
+          </ul>
+        </section>
 
-    <footer class="px">rosanaliu.com</footer>
+        <section aria-labelledby="h-elsewhere">
+          <h2 id="h-elsewhere" class="px">Elsewhere</h2>
+          <ul class="list">
+            <li><a class="link" href="https://github.com/RosanaL" target="_blank" rel="noopener"><span class="name">GitHub</span><span class="where px">RosanaL</span></a></li>
+            <li><a class="link" href="https://www.linkedin.com/in/rosana-liu-2a8050228/" target="_blank" rel="noopener"><span class="name">LinkedIn</span><span class="where px">rosana-liu</span></a></li>
+            <li><a class="link mail" href="mailto:rrliu1020@gmail.com"><span class="name">Email</span><span class="where px">rrliu1020@gmail.com</span></a></li>
+          </ul>
+        </section>
+
+        <footer class="px">rosanaliu.com</footer>
+      </div>
+    </div>
   </main>
+
+  <script>
+    /* Each project carries its tags in data-tags; the left column filters by one tag at a time. */
+    (() => {
+      const LABEL = { agent: "AI Agent", ml: "Machine Learning", product: "Product" };
+      const items = [...document.querySelectorAll("#projects > li")];
+      const buttons = [...document.querySelectorAll(".filter")];
+      const tagsOf = (li) => li.dataset.tags.split(/\s+/).filter(Boolean);
+
+      items.forEach((li) => {
+        li.querySelector(".tags").append(...tagsOf(li).map((t) => {
+          const s = document.createElement("span");
+          s.className = "tag px"; s.dataset.tag = t; s.textContent = LABEL[t] || t;
+          return s;
+        }));
+      });
+      buttons.forEach((b) => {
+        const f = b.dataset.filter;
+        b.querySelector(".count").textContent = f === "all" ? items.length : items.filter((li) => tagsOf(li).includes(f)).length;
+      });
+
+      const apply = (f) => {
+        if (f !== "all" && !LABEL[f]) f = "all";
+        buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filter === f)));
+        items.forEach((li) => { li.hidden = f !== "all" && !tagsOf(li).includes(f); });
+        document.querySelectorAll(".tag").forEach((t) => t.classList.toggle("on", t.dataset.tag === f));
+        try { history.replaceState(null, "", f === "all" ? location.pathname : "#" + f); } catch (e) { /* fine */ }
+      };
+      buttons.forEach((b) => b.addEventListener("click", () => apply(b.dataset.filter)));
+      apply(location.hash.slice(1) || "all");
+    })();
+  </script>
 </body>
 </html>
