@@ -3,67 +3,123 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Rosana Liu — The Case Files</title>
-  <meta name="description" content="Rosana Liu's portfolio, played as a 1990s Japanese text adventure. Every case is something Rosana built: machine learning, aesthetic software and writing.">
-  <meta name="theme-color" content="#000011">
-  <link rel="canonical" href="https://rosanaliu.com/">
+  <title>Rosana Liu</title>
+  <meta name="description" content="Rosana Liu builds software and trains models. Links to her projects and where to find her.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rosanaliu.com/">
-  <meta property="og:title" content="Rosana Liu — The Case Files">
-  <meta property="og:description" content="Every case is something Rosana built.">
-  <meta property="og:image" content="https://rosanaliu.com/assets/og.png">
-  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:title" content="Rosana Liu">
+  <meta property="og:description" content="Software, models, and a few cute things people want to keep.">
+  <meta property="og:image" content="https://rosanaliu.com/assets/avatar.png">
+  <meta name="twitter:card" content="summary">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Sans:wght@400;500&display=swap">
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --ink: #161a2e;
+      --muted: #676b82;
+      --rule: #d9d4c7;
+      --accent: #c93a78;
+      --hover: #ebe6da;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1424;
+        --ink: #e6ebf7;
+        --muted: #8890ad;
+        --rule: #263055;
+        --accent: #ff6fae;
+        --hover: #161d33;
+        color-scheme: dark;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font: 400 17px/1.55 "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+      padding-block: clamp(48px, 12vh, 120px) 64px;
+      padding-left: max(20px, env(safe-area-inset-left, 0px));
+      padding-right: max(20px, env(safe-area-inset-right, 0px));
+    }
+    main { max-width: 34rem; margin: 0 auto; display: grid; gap: 44px; }
+    a { color: inherit; text-decoration: none; }
+    .px { font-family: "DotGothic16", ui-monospace, "SF Mono", Menlo, monospace; }
+
+    header { display: grid; gap: 18px; }
+    .avatar {
+      width: 96px; height: 96px;
+      image-rendering: pixelated;
+      outline: 1px solid var(--rule);
+      outline-offset: 3px;
+    }
+    h1 { font-size: 2.1rem; font-weight: 400; line-height: 1.1; letter-spacing: .01em; }
+    .lede { color: var(--muted); max-width: 30rem; text-wrap: pretty; }
+
+    section { display: grid; gap: 6px; }
+    h2 {
+      font-size: .78rem; font-weight: 400; color: var(--muted);
+      letter-spacing: .14em; text-transform: uppercase;
+      padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+    }
+    ul { list-style: none; padding: 0; display: grid; }
+    li + li { border-top: 1px solid var(--rule); }
+    .link {
+      display: grid; grid-template-columns: 1fr auto; gap: 2px 16px;
+      align-items: baseline;
+      padding: 12px 10px; margin: 0 -10px;
+      transition: background-color .15s;
+    }
+    .link:hover, .link:focus-visible { background: var(--hover); outline: none; }
+    .link:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+    .name { font-weight: 500; }
+    .where { color: var(--muted); font-size: .85rem; text-align: right; white-space: nowrap; }
+    .where::after { content: " ↗"; color: var(--accent); }
+    .mail .where::after { content: " ✉"; }
+    .note { grid-column: 1 / -1; color: var(--muted); font-size: .92rem; }
+    .link:hover .name, .link:focus-visible .name { color: var(--accent); }
+
+    footer { color: var(--muted); font-size: .8rem; }
+    @media (max-width: 420px) {
+      .link { grid-template-columns: 1fr; }
+      .where { text-align: left; }
+    }
+    @media (prefers-reduced-motion: reduce) { .link { transition: none; } }
+  </style>
 </head>
 <body>
-  <main id="stage" class="scan">
-    <header id="bar">
-      <h1>Rosana Liu <span>事件簿</span></h1>
-      <p id="where"></p>
-      <p id="tally"></p>
-      <div id="sys"></div>
+  <main>
+    <header>
+      <img class="avatar" src="assets/avatar.png" width="160" height="160" alt="Pixel portrait of Rosana">
+      <h1 class="px">Rosana Liu</h1>
+      <p class="lede">I build software and train models, and I like both better when they have a personality.</p>
     </header>
 
-    <section id="view" aria-label="Scene">
-      <canvas id="scene" width="448" height="272" aria-hidden="true"></canvas>
-      <canvas id="bust" width="256" height="272" aria-hidden="true"></canvas>
-      <div id="spots"></div>
-      <div id="sheet" hidden></div>
-      <div id="stamp" hidden></div>
+    <section aria-labelledby="h-projects">
+      <h2 id="h-projects" class="px">Projects</h2>
+      <ul>
+        <li><a class="link" href="https://www.heychirpi.com" target="_blank" rel="noopener"><span class="name">Chirpi</span><span class="where px">heychirpi.com</span><span class="note">Less planning. More playing.</span></a></li>
+        <li><a class="link" href="https://rosanafixes.it" target="_blank" rel="noopener"><span class="name">Rosana Fixes It</span><span class="where px">rosanafixes.it</span><span class="note">I fix the tech, so you can run the business.</span></a></li>
+        <li><a class="link" href="https://wallet-orb.vercel.app" target="_blank" rel="noopener"><span class="name">Wallet Orb</span><span class="where px">wallet-orb.vercel.app</span><span class="note">Person or bot? Ask the orb.</span></a></li>
+        <li><a class="link" href="https://curipo-three.vercel.app" target="_blank" rel="noopener"><span class="name">Curipo</span><span class="where px">curipo-three.vercel.app</span><span class="note">Find your AI crew.</span></a></li>
+      </ul>
     </section>
 
-    <nav id="cmds" aria-label="Commands"></nav>
-
-    <section id="box" aria-label="Dialogue">
-      <span id="who" hidden></span>
-      <p id="line" aria-hidden="true"></p>
-      <p id="sr" class="sr" aria-live="polite"></p>
-      <i id="more" hidden aria-hidden="true">▼</i>
+    <section aria-labelledby="h-elsewhere">
+      <h2 id="h-elsewhere" class="px">Elsewhere</h2>
+      <ul>
+        <li><a class="link" href="https://github.com/RosanaL" target="_blank" rel="noopener"><span class="name">GitHub</span><span class="where px">RosanaL</span></a></li>
+        <li><a class="link" href="https://www.linkedin.com/in/rosana-liu-2a8050228/" target="_blank" rel="noopener"><span class="name">LinkedIn</span><span class="where px">rosana-liu</span></a></li>
+        <li><a class="link mail" href="mailto:ineed@rosanafixes.it"><span class="name">Email</span><span class="where px">ineed@rosanafixes.it</span></a></li>
+      </ul>
     </section>
 
-    <div id="front" hidden>
-      <div id="cover">
-        <img id="cover-art" src="assets/cover.webp" alt="ROSANA_98: The Case Archive. Rosana rests her chin on her hand at a desk at night, beside an evidence board." loading="lazy">
-        <img id="cover-logo" src="assets/cover-logo.webp" alt="ROSANA_98: The Case Archive" loading="lazy">
-        <img id="cover-m" src="assets/cover-m.webp" alt="" loading="lazy">
-        <div id="menu"></div>
-      </div>
-      <div id="boot" hidden aria-hidden="true"></div>
-    </div>
+    <footer class="px">rosanaliu.com</footer>
   </main>
-
-  <noscript>
-    <h1>Rosana Liu</h1>
-    <p>This portfolio is a small text adventure that needs JavaScript. You can also find my work on <a href="https://github.com/RosanaL">GitHub</a> and <a href="https://www.linkedin.com/in/rosana-liu-2a8050228/">LinkedIn</a>.</p>
-  </noscript>
-
-  <script src="js/content.js"></script>
-  <script src="js/cases.js"></script>
-  <script src="js/scenes.js"></script>
-  <script src="js/engine.js"></script>
 </body>
 </html>
