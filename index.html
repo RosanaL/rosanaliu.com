@@ -53,7 +53,9 @@
 
     header { display: grid; gap: 18px; }
     h1 { font-size: 2.1rem; font-weight: 400; line-height: 1.1; letter-spacing: .01em; }
-    .lede { color: var(--muted); max-width: 30rem; text-wrap: pretty; }
+    .intro { display: grid; gap: 14px; max-width: 36rem; color: var(--muted); text-wrap: pretty; }
+    .intro p:first-child { color: var(--ink); }
+    .intro cite { font-style: italic; color: var(--ink); }
 
     /* Filters on the left, the list on the right. */
     .board { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: 40px; align-items: start; }
@@ -122,7 +124,13 @@
   <main>
     <header>
       <h1 class="px">Rosana Liu</h1>
-      <p class="lede">I build software and train models, and I like both better when they have a personality.</p>
+      <div class="intro">
+        <p>Hi! I’m Rosana. With a background in applied mathematics, I am currently pursuing a Master’s degree in Computer Science, focusing on machine learning and artificial intelligence.</p>
+        <p>I am deeply passionate about exploring the intersection of AI and consumer products. I believe that AI agents should possess distinct personalities, and I am currently working on several personal projects centered around this concept. I love experimenting with new ideas and transforming them into tangible products.</p>
+        <p>Beyond the world of tech, I enjoy golf, chess, anime, Sudoku, Kuromi, video games—and anything else that involves strategy, creativity, or an intellectual challenge.</p>
+        <p>I have an innate curiosity about how things work—whether it’s the mechanics of a machine learning model, the intricacies of a chess game, or the nuances of a golf swing. I enjoy reading about a wide variety of subjects; my favorite book is <cite>Gödel, Escher, Bach</cite>. I often find myself falling down a “rabbit hole,” completely losing track of time.</p>
+        <p>Looking forward to making new friends! ^_^</p>
+      </div>
     </header>
 
     <div class="board">
