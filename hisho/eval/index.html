@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisho — Agent Evaluation</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #fbfaf8; --panel: #fff; --ink: #1a1a19; --mute: #6b6a66;
+  --line: #e4e2dd; --line-soft: #efedea;
+  --accent: #1f5fa8; --accent-soft: #eaf1fa;
+  --ok: #1d7a4c; --ok-soft: #e7f4ec;
+  --bad: #b4332b; --bad-soft: #fbeceb;
+  --warn: #8a5a12; --warn-soft: #fcf3e2;
+  --gate: #6b3fa0; --gate-soft: #f2ecfa;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #15161a; --panel: #1c1e23; --ink: #e8e7e4; --mute: #999892;
+    --line: #2e3137; --line-soft: #25282d;
+    --accent: #78aee8; --accent-soft: #1b2733;
+    --ok: #6cc094; --ok-soft: #16271e;
+    --bad: #e8827a; --bad-soft: #2a1a19;
+    --warn: #d9ab62; --warn-soft: #272018;
+    --gate: #b795e0; --gate-soft: #221b2d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #15161a; --panel: #1c1e23; --ink: #e8e7e4; --mute: #999892;
+  --line: #2e3137; --line-soft: #25282d;
+  --accent: #78aee8; --accent-soft: #1b2733;
+  --ok: #6cc094; --ok-soft: #16271e;
+  --bad: #e8827a; --bad-soft: #2a1a19;
+  --warn: #d9ab62; --warn-soft: #272018;
+  --gate: #b795e0; --gate-soft: #221b2d;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px; }
+h1 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; font-weight: 650; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
+     color: var(--mute); font-weight: 600; margin: 44px 0 14px; }
+.lede { color: var(--mute); max-width: 68ch; margin: 0 0 4px; }
+.lede code { font-family: var(--mono); font-size: 0.9em; }
+a { color: var(--accent); }
+
+header { border-bottom: 1px solid var(--line); padding-bottom: 22px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 14px;
+        font-size: 13px; color: var(--mute); font-family: var(--mono); }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px;
+          background: var(--panel); }
+th, td { padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--line-soft);
+         white-space: nowrap; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;
+     color: var(--mute); font-weight: 600; background: var(--bg); }
+tbody tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-family: var(--mono); font-size: 13px; }
+td.metric { font-family: var(--mono); font-size: 13px; }
+
+.rate { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+.rate b { font-family: var(--mono); font-weight: 600; min-width: 42px; text-align: right; }
+.ci { font-family: var(--mono); font-size: 11.5px; color: var(--mute); }
+.bar { position: relative; width: 108px; height: 7px; border-radius: 4px;
+       background: var(--line); overflow: hidden; flex: none; }
+.bar i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--accent); }
+.bar i.good { background: var(--ok); } .bar i.poor { background: var(--bad); }
+.bar u { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--ink) 22%, transparent); }
+.delta { font-family: var(--mono); font-size: 12.5px; }
+.delta.up { color: var(--ok); } .delta.down { color: var(--bad); }
+
+.pill { display: inline-block; padding: 1px 7px; border-radius: 5px; font-size: 11px;
+        font-weight: 650; letter-spacing: 0.03em; font-family: var(--mono); }
+.pill.read { background: var(--accent-soft); color: var(--accent); }
+.pill.draft { background: var(--warn-soft); color: var(--warn); }
+.pill.external_write, .pill.destructive { background: var(--bad-soft); color: var(--bad); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.fail { background: var(--bad-soft); color: var(--bad); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+select, input[type=search], button {
+  font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 7px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+}
+button { cursor: pointer; }
+button.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.spacer { flex: 1; }
+.count { font-size: 13px; color: var(--mute); font-family: var(--mono); }
+
+.runs { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 18px; align-items: start; }
+@media (max-width: 860px) { .runs { grid-template-columns: 1fr; } }
+.list { border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
+        max-height: 70vh; overflow-y: auto; }
+.run { display: flex; gap: 10px; align-items: baseline; width: 100%; text-align: left;
+       padding: 9px 12px; border: 0; border-bottom: 1px solid var(--line-soft);
+       border-radius: 0; background: none; cursor: pointer; }
+.run:last-child { border-bottom: 0; }
+.run:hover { background: var(--bg); }
+.run[aria-current="true"] { background: var(--accent-soft); }
+.run .mark { font-family: var(--mono); font-weight: 700; flex: none; }
+.run .mark.ok { color: var(--ok); } .run .mark.fail { color: var(--bad); }
+.run .tid { font-family: var(--mono); font-size: 12.5px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.run .tail { font-family: var(--mono); font-size: 11px; color: var(--mute); flex: none; }
+
+.trace { border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
+         padding: 18px 20px; min-height: 320px; }
+.trace .hd { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center;
+             padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+.trace .hd .tid { font-family: var(--mono); font-weight: 650; font-size: 15px; }
+.trace .note { font-size: 13px; color: var(--mute); margin: -6px 0 16px; }
+
+.ev { display: grid; grid-template-columns: 74px 1fr; gap: 12px;
+      padding: 7px 0; border-left: 2px solid transparent; }
+.ev .who { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+           letter-spacing: 0.05em; color: var(--mute); padding-top: 3px; text-align: right; }
+.ev .body { min-width: 0; }
+.ev.user .body { font-weight: 550; }
+.ev.tool .body { font-family: var(--mono); font-size: 13px; }
+.ev.indent { padding-left: 14px; }
+.ev.gate { background: var(--gate-soft); border-left-color: var(--gate);
+           margin: 6px -20px; padding: 10px 20px 10px 18px; }
+.ev.gate .who { color: var(--gate); font-weight: 700; }
+.ev.gate .said { font-weight: 600; margin-top: 3px; }
+.ev.grant { background: var(--ok-soft); border-left-color: var(--ok);
+            margin: 0 -20px; padding: 7px 20px 7px 18px; }
+.ev.deny { background: var(--bad-soft); border-left-color: var(--bad);
+           margin: 0 -20px; padding: 7px 20px 7px 18px; }
+.ev.err .body { color: var(--bad); }
+.ev.final .body { font-weight: 550; }
+.args { color: var(--mute); }
+.res { color: var(--mute); font-size: 12.5px; }
+.res.bad { color: var(--bad); }
+details.raw { margin-top: 3px; }
+details.raw summary { cursor: pointer; font-size: 11.5px; color: var(--mute); }
+details.raw pre { margin: 5px 0 0; padding: 9px 11px; background: var(--bg);
+                  border: 1px solid var(--line-soft); border-radius: 7px;
+                  font-size: 11.5px; overflow-x: auto; white-space: pre-wrap;
+                  word-break: break-word; max-height: 260px; }
+.checks { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line);
+          display: flex; flex-wrap: wrap; gap: 6px; }
+.chk { font-family: var(--mono); font-size: 11.5px; padding: 2px 8px; border-radius: 5px; }
+.chk.ok { background: var(--ok-soft); color: var(--ok); }
+.chk.fail { background: var(--bad-soft); color: var(--bad); }
+.empty { color: var(--mute); padding: 40px 0; text-align: center; }
+footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line);
+         font-size: 13px; color: var(--mute); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Hisho — Agent Evaluation</h1>
+  <p class="lede">
+    A hands-free work agent for the car, and the harness that measures it.
+    Consequential actions — sending mail, moving or cancelling meetings — are
+    gated in application code rather than by prompt instruction, and the
+    sentence the user hears before approving one is generated by the policy
+    layer, not by the model. Every run below is the product agent, constructed
+    by the same <code>build_agent()</code> the CLI uses, against a resettable
+    mock calendar, inbox and course list.
+  </p>
+  <div class="meta" id="meta"></div>
+</header>
+
+<h2>Results</h2>
+<p class="lede" id="resultsNote"></p>
+<div class="scroll"><table id="metrics"></table></div>
+
+<h2>Per task</h2>
+<div class="scroll"><table id="perTask"></table></div>
+
+<h2>Failure modes</h2>
+<p class="lede">Grouped by the check that failed, counted over all runs. This is
+what drives the next version — the largest cluster is the one worth fixing.</p>
+<div class="scroll"><table id="failures"></table></div>
+
+<h2>Trajectories</h2>
+<p class="lede">Every run, replayable. <strong>GATE</strong> marks the point
+where the confirmation policy stopped a consequential tool before it executed.</p>
+<div class="controls">
+  <select id="fVersion"></select>
+  <select id="fTask"></select>
+  <select id="fTag"></select>
+  <button class="chip" id="fFail" aria-pressed="false">failures only</button>
+  <input type="search" id="fText" placeholder="search spoken text…" style="min-width:180px">
+  <span class="spacer"></span>
+  <span class="count" id="runCount"></span>
+</div>
+<div class="runs">
+  <div class="list" id="runList"></div>
+  <div class="trace" id="trace"><div class="empty">Pick a run.</div></div>
+</div>
+
+<footer id="footer"></footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct = (x) => (x * 100).toFixed(0) + "%";
+
+const METRIC_LABELS = {
+  task_success: "task success",
+  state_correct: "final state correct",
+  no_unauthorized_side_effects: "no unauthorized side effects",
+  no_forbidden_tools: "no forbidden tools",
+  expected_tools_used: "expected tools used",
+  confirmation_as_expected: "confirmation as expected",
+  clarification_as_expected: "clarification as expected",
+  no_false_claims: "no false claims",
+  required_facts_mentioned: "required facts stated",
+  readback_before_send: "draft read back before send",
+};
+const MEAN_LABELS = {
+  turns: "turns", tool_calls: "tool calls", tool_errors: "tool errors",
+  latency_s: "latency (s)", tokens: "tokens", response_words: "response words",
+};
+
+let DATA = null, SEL = null;
+
+function barCell(r, invertGood) {
+  const good = invertGood ? r.p <= 0.05 : r.p >= 0.9;
+  const poor = invertGood ? r.p >= 0.5 : r.p <= 0.5;
+  const cls = good ? "good" : poor ? "poor" : "";
+  const w = (r.hi - r.lo) * 100;
+  return `<div class="rate">
+    <span class="ci">[${r.lo.toFixed(2)}, ${r.hi.toFixed(2)}]</span>
+    <b>${pct(r.p)}</b>
+    <span class="bar"><i class="${cls}" style="width:${r.p * 100}%"></i><u style="left:${r.lo * 100}%;width:${w}%"></u></span>
+  </div>`;
+}
+
+function renderMeta() {
+  const v = DATA.versions;
+  const total = v.reduce((a, x) => a + x.n_runs, 0);
+  // Arms may come from different task sets (a development set and a held-out
+  // set), so one task count would be a lie about at least one column.
+  const sizes = [...new Set(v.map(x => Object.keys(x.per_task).length))].sort((a, b) => b - a);
+  const tasks = sizes[0];
+  const trials = Math.round(v[0].n_runs / Object.keys(v[0].per_task).length) || 1;
+  $("meta").innerHTML = [
+    `${sizes.join(" + ")} tasks × ${trials} trials`,
+    `${total} runs`,
+    v.map(x => x.label).join(" vs "),
+    v[0].model,
+  ].map(s => `<span>${esc(s)}</span>`).join("");
+  $("resultsNote").textContent =
+    `Every rate carries a 95% Wilson interval. With ${trials} trials per task the intervals are wide, `
+    + `and showing them is the point — a single trial would report noise as a finding.`;
+  $("footer").innerHTML =
+    `Generated by <code>hisho-eval</code>. Traces are JSONL; this page is static — `
+    + `no backend, no API key, nothing runs when you open it.`;
+}
+
+function renderMetrics() {
+  const vs = DATA.versions;
+  const rows = Object.keys(METRIC_LABELS).filter(k => vs.some(v => v.rates[k] && v.rates[k].n));
+  let h = `<thead><tr><th>metric</th>${vs.map(v => `<th class="num">${esc(v.label)}</th>`).join("")}`
+        + (vs.length > 1 ? `<th class="num">Δ</th>` : "") + `<th class="num">n</th></tr></thead><tbody>`;
+  for (const k of rows) {
+    const cells = vs.map(v => {
+      const r = v.rates[k];
+      return `<td class="num">${r && r.n ? barCell(r, false) : "—"}</td>`;
+    }).join("");
+    let delta = "";
+    if (vs.length > 1) {
+      const a = vs[0].rates[k], b = vs[vs.length - 1].rates[k];
+      if (a && b && a.n && b.n) {
+        const d = b.p - a.p;
+        const cls = d > 0.001 ? "up" : d < -0.001 ? "down" : "";
+        delta = `<td class="num"><span class="delta ${cls}">${d >= 0 ? "+" : ""}${(d * 100).toFixed(0)}pp</span></td>`;
+      } else delta = `<td class="num">—</td>`;
+    }
+    const n = vs.map(v => v.rates[k]?.n).find(x => x) ?? "";
+    h += `<tr><td class="metric">${esc(METRIC_LABELS[k])}</td>${cells}${delta}<td class="num">${n}</td></tr>`;
+  }
+  h += `</tbody><tbody>`;
+  for (const k of Object.keys(MEAN_LABELS)) {
+    const cells = vs.map(v => `<td class="num">${(v.means[k] ?? 0).toFixed(k === "tokens" ? 0 : 2)}</td>`).join("");
+    h += `<tr><td class="metric">${esc(MEAN_LABELS[k])}</td>${cells}${vs.length > 1 ? "<td></td>" : ""}<td></td></tr>`;
+  }
+  $("metrics").innerHTML = h + `</tbody>`;
+}
+
+function renderPerTask() {
+  const vs = DATA.versions;
+  const ids = [...new Set(vs.flatMap(v => Object.keys(v.per_task)))].sort();
+  let h = `<thead><tr><th>task</th>${vs.map(v => `<th class="num">${esc(v.label)}</th>`).join("")}<th>tags</th></tr></thead><tbody>`;
+  for (const id of ids) {
+    const tags = (DATA.runs.find(r => r.task_id === id)?.tags ?? []).join(" ");
+    const cells = vs.map(v => {
+      const t = v.per_task[id];
+      if (!t) return `<td class="num">—</td>`;
+      const mark = t.all ? `<span class="mark ok">✓</span>` : "";
+      return `<td class="num">${pct(t.p)} <span class="ci">${t.k ?? ""}</span> ${mark}</td>`;
+    }).join("");
+    h += `<tr><td class="metric">${esc(id)}</td>${cells}<td class="ci">${esc(tags)}</td></tr>`;
+  }
+  $("perTask").innerHTML = h + `</tbody>`;
+}
+
+function renderFailures() {
+  const vs = DATA.versions;
+  const keys = [...new Set(vs.flatMap(v => Object.keys(v.failures)))]
+    .sort((a, b) => (vs[0].failures[b] ?? 0) - (vs[0].failures[a] ?? 0));
+  if (!keys.length) { $("failures").innerHTML = `<tbody><tr><td>No failures.</td></tr></tbody>`; return; }
+  let h = `<thead><tr><th>failed check</th>${vs.map(v => `<th class="num">${esc(v.label)}</th>`).join("")}</tr></thead><tbody>`;
+  for (const k of keys) {
+    const cells = vs.map(v => `<td class="num">${v.failures[k] ?? 0}</td>`).join("");
+    h += `<tr><td class="metric">${esc(k)}</td>${cells}</tr>`;
+  }
+  $("failures").innerHTML = h + `</tbody>`;
+}
+
+function fillSelect(el, items, allLabel) {
+  el.innerHTML = `<option value="">${allLabel}</option>`
+    + items.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("");
+}
+
+function filtered() {
+  const v = $("fVersion").value, t = $("fTask").value, g = $("fTag").value;
+  const failOnly = $("fFail").getAttribute("aria-pressed") === "true";
+  const q = $("fText").value.trim().toLowerCase();
+  return DATA.runs.filter(r => {
+    if (v && r.label !== v) return false;
+    if (t && r.task_id !== t) return false;
+    if (g && !r.tags.includes(g)) return false;
+    if (failOnly && r.success) return false;
+    if (q) {
+      const said = r.events.filter(e => e.type === "FINAL_RESPONSE" || e.type === "USER_MESSAGE")
+        .map(e => e.text || "").join(" ").toLowerCase();
+      if (!said.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderList() {
+  const runs = filtered();
+  $("runCount").textContent = `${runs.length} run${runs.length === 1 ? "" : "s"}`;
+  $("runList").innerHTML = runs.map(r => {
+    const cur = SEL && SEL.run_id === r.run_id;
+    return `<button class="run" data-id="${r.run_id}" aria-current="${cur}">
+      <span class="mark ${r.success ? "ok" : "fail"}">${r.success ? "✓" : "✗"}</span>
+      <span class="tid">${esc(r.task_id)}</span>
+      <span class="tail">${esc(r.label)} #${r.trial}</span>
+    </button>`;
+  }).join("") || `<div class="empty">Nothing matches.</div>`;
+  for (const b of $("runList").querySelectorAll(".run")) {
+    b.onclick = () => { SEL = DATA.runs.find(r => r.run_id === b.dataset.id); renderList(); renderTrace(); };
+  }
+}
+
+function argline(args) {
+  const parts = Object.entries(args || {}).map(([k, v]) => {
+    let s = typeof v === "string" ? v : JSON.stringify(v);
+    if (s && s.length > 54) s = s.slice(0, 52) + "…";
+    return `${k}: ${s}`;
+  });
+  return parts.length ? `<span class="args">{ ${esc(parts.join(", "))} }</span>` : "";
+}
+
+function resultLine(e) {
+  if (!e.ok) return `<div class="res bad">✗ ${esc(e.error_type)} — ${esc(e.error_message || "")}</div>`;
+  const d = e.result;
+  let gist = "ok";
+  if (Array.isArray(d)) {
+    gist = `${d.length} result${d.length === 1 ? "" : "s"}`;
+    const names = d.map(x => x && (x.title || x.name || x.subject)).filter(Boolean);
+    if (names.length) gist += ": " + names.slice(0, 3).join(", ") + (names.length > 3 ? "…" : "");
+  } else if (d && typeof d === "object") {
+    gist = d.title || d.name || d.subject || d.status || "ok";
+  }
+  const raw = `<details class="raw"><summary>raw</summary><pre>${esc(JSON.stringify(d, null, 2))}</pre></details>`;
+  return `<div class="res">✓ ${esc(gist)} <span class="ci">${e.latency_ms?.toFixed(1) ?? 0}ms</span></div>${raw}`;
+}
+
+function renderTrace() {
+  if (!SEL) { $("trace").innerHTML = `<div class="empty">Pick a run.</div>`; return; }
+  const r = SEL;
+  let h = `<div class="hd">
+    <span class="tid">${esc(r.task_id)}</span>
+    <span class="pill ${r.success ? "ok" : "fail"}">${r.success ? "PASS" : "FAIL"}</span>
+    <span class="ci">${esc(r.label)} · trial ${r.trial} · ${esc(r.model)} · policy ${esc(r.policy_mode)}</span>
+    <span class="spacer"></span>
+    <span class="ci">${r.turns} turns · ${r.tool_calls} tools · ${(r.latency_ms / 1000).toFixed(1)}s · ${r.tokens} tok</span>
+  </div>`;
+
+  for (const e of r.events) {
+    switch (e.type) {
+      case "USER_MESSAGE":
+        h += `<div class="ev user"><div class="who">user</div><div class="body">${esc(e.text)}</div></div>`;
+        break;
+      case "MODEL_RESPONSE":
+        if (e.text) h += `<div class="ev"><div class="who">model</div><div class="body">${esc(e.text)}</div></div>`;
+        break;
+      case "TOOL_PROPOSED":
+        h += `<div class="ev tool"><div class="who">proposes</div><div class="body">
+          <span class="pill ${esc(e.risk)}">${esc(e.risk)}</span> ${esc(e.tool)} ${argline(e.arguments)}
+        </div></div>`;
+        break;
+      case "CONFIRMATION_REQUESTED":
+        h += `<div class="ev gate"><div class="who">gate</div><div class="body">
+          blocked <strong>${esc(e.tool)}</strong> — ${esc(e.risk)} needs confirmation
+          <div class="said">“${esc(e.summary)}”</div>
+        </div></div>`;
+        break;
+      case "USER_CONFIRMATION":
+        h += `<div class="ev ${e.granted ? "grant" : "deny"}"><div class="who">${e.granted ? "granted" : "declined"}</div>
+          <div class="body">${esc(e.granted ? "proceed with the frozen arguments" : "action dropped, nothing changed")}</div></div>`;
+        break;
+      case "TOOL_EXECUTED":
+        h += `<div class="ev tool indent"><div class="who">executes</div><div class="body">
+          ${esc(e.tool)}${e.confirmed ? ` <span class="pill ok">CONFIRMED</span>` : ""}</div></div>`;
+        break;
+      case "TOOL_RESULT":
+        h += `<div class="ev tool indent"><div class="who"></div><div class="body">${resultLine(e)}</div></div>`;
+        break;
+      case "FINAL_RESPONSE":
+        h += `<div class="ev final"><div class="who">hisho</div><div class="body">${esc(e.text)}
+          <span class="ci"> · ${e.word_count} words</span></div></div>`;
+        break;
+      case "ERROR":
+        h += `<div class="ev err"><div class="who">error</div><div class="body">${esc(e.error_type)}: ${esc(e.message)}</div></div>`;
+        break;
+    }
+  }
+
+  const entries = Object.entries(r.checks || {});
+  if (entries.length) {
+    h += `<div class="checks">` + entries
+      .sort((a, b) => Number(a[1]) - Number(b[1]))
+      .map(([k, ok]) => `<span class="chk ${ok ? "ok" : "fail"}">${ok ? "✓" : "✗"} ${esc(k)}</span>`)
+      .join("") + `</div>`;
+  }
+  $("trace").innerHTML = h;
+}
+
+fetch("data.json").then(r => r.json()).then(d => {
+  DATA = d;
+  renderMeta(); renderMetrics(); renderPerTask(); renderFailures();
+  fillSelect($("fVersion"), DATA.versions.map(v => v.label), "all versions");
+  fillSelect($("fTask"), [...new Set(DATA.runs.map(r => r.task_id))].sort(), "all tasks");
+  fillSelect($("fTag"), [...new Set(DATA.runs.flatMap(r => r.tags))].sort(), "all tags");
+  for (const el of ["fVersion", "fTask", "fTag", "fText"]) $(el).oninput = renderList;
+  $("fFail").onclick = (e) => {
+    const b = e.currentTarget;
+    b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    renderList();
+  };
+  renderList();
+  const firstFail = DATA.runs.find(r => !r.success);
+  if (firstFail) { SEL = firstFail; renderList(); renderTrace(); }
+}).catch(err => {
+  document.querySelector(".wrap").insertAdjacentHTML("afterbegin",
+    `<p style="color:var(--bad)">Could not load <code>data.json</code> — serve this folder over HTTP
+     (<code>python -m http.server</code>); opening the file directly is blocked by the browser. (${esc(err)})</p>`);
+});
+</script>
+</body>
+</html>

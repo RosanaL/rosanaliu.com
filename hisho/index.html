@@ -1,0 +1,671 @@
+<title>Hisho Agent Evaluation</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500;600&display=swap">
+<style>
+/* Layout: single-column lab report. Measured figures carry their interval and n inline. */
+:root {
+  --paper:#f7f8f9; --card:#ffffff; --ink:#15181c; --ink-2:#4c535c; --ink-3:#767e88;
+  --rule:#e0e4e8; --rule-2:#eef1f3;
+  --accent:#17537f; --accent-wash:#e8f0f6;
+  --ok:#1b6b47; --ok-wash:#e6f2ec;
+  --open:#8a5612; --open-wash:#fbf2e3;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#101317; --card:#171b20; --ink:#e7eaed; --ink-2:#a8b1ba; --ink-3:#7b848e;
+  --rule:#272d34; --rule-2:#1e242a;
+  --accent:#78b4e0; --accent-wash:#152430;
+  --ok:#64c195; --ok-wash:#122520;
+  --open:#dcab56; --open-wash:#2a2112;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#101317; --card:#171b20; --ink:#e7eaed; --ink-2:#a8b1ba; --ink-3:#7b848e;
+  --rule:#272d34; --rule-2:#1e242a;
+  --accent:#78b4e0; --accent-wash:#152430;
+  --ok:#64c195; --ok-wash:#122520;
+  --open:#dcab56; --open-wash:#2a2112;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:52rem; margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 4rem;
+}
+h1,h2,h3{font-family:var(--serif); font-weight:600; text-wrap:balance; margin:0}
+h1{font-size:clamp(2rem,6vw,2.9rem); line-height:1.1; letter-spacing:-.015em}
+h2{font-size:clamp(1.3rem,3.4vw,1.6rem); line-height:1.22; letter-spacing:-.01em}
+h3{font-size:1.02rem; line-height:1.35}
+p{margin:0}
+a{color:var(--accent); text-underline-offset:.18em; text-decoration-thickness:1px}
+code,.mono{font-family:var(--mono); font-size:.88em; font-variant-ligatures:none}
+code{background:var(--rule-2); padding:.1em .34em; border-radius:3px}
+strong{font-weight:600}
+
+.eyebrow{
+  font-family:var(--mono); font-size:.72rem; font-weight:500;
+  letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3);
+}
+
+/* ---------- masthead ---------- */
+header.mast{
+  border-bottom:1px solid var(--rule);
+  padding-block:3.2rem 2rem;
+  display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1.5rem 2.2rem; align-items:start;
+}
+.mast-text{display:flex; flex-direction:column; gap:1.1rem; min-width:0}
+.portrait{margin:0; width:clamp(7rem,16vw,10rem); display:flex; flex-direction:column; gap:.5rem}
+.portrait img{
+  width:100%; aspect-ratio:1/1; object-fit:cover; object-position:50% 38%;
+  display:block; border-radius:5px; border:1px solid var(--rule); background:var(--card);
+}
+.portrait figcaption{
+  font-family:var(--mono); font-size:.66rem; line-height:1.45;
+  letter-spacing:.03em; color:var(--ink-3);
+}
+.lede{font-size:1.08rem; color:var(--ink-2); max-width:40rem}
+.lede b{color:var(--ink); font-weight:600}
+.meta{
+  display:flex; flex-wrap:wrap; gap:.4rem .9rem;
+  font-family:var(--mono); font-size:.76rem; color:var(--ink-3);
+}
+.meta span{white-space:nowrap}
+
+/* ---------- figure strip ---------- */
+.figs{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));
+  gap:1px; background:var(--rule); border:1px solid var(--rule);
+  border-radius:4px; overflow:hidden; margin-block:2.4rem;
+}
+.fig{background:var(--card); padding:1.15rem 1.1rem 1.25rem; display:flex; flex-direction:column; gap:.3rem; min-width:0}
+.fig-n{
+  font-family:var(--mono); font-weight:500; font-size:1.72rem; line-height:1.05;
+  letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:var(--ink);
+}
+.fig-n .arrow{color:var(--ink-3); font-weight:400; padding:0 .12em}
+.fig-n .to{color:var(--accent)}
+.fig-k{font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+.fig-s{font-size:.84rem; color:var(--ink-2); line-height:1.45}
+
+/* ---------- sections ---------- */
+section{padding-block:2.6rem; border-top:1px solid var(--rule)}
+section > .hd{display:flex; flex-direction:column; gap:.45rem; margin-bottom:1.5rem}
+.body{display:flex; flex-direction:column; gap:1.1rem; max-width:40rem}
+.body.wide{max-width:none}
+
+/* ---------- interval bars ---------- */
+.rate{display:flex; align-items:center; gap:.6rem; min-width:0}
+.rate-v{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:500; white-space:nowrap}
+.iv{position:relative; flex:1; min-width:3.5rem; height:7px; background:var(--rule-2); border-radius:4px; overflow:hidden}
+.iv-band{position:absolute; top:0; bottom:0; left:calc(var(--lo)*100%); width:calc((var(--hi) - var(--lo))*100%); background:color-mix(in srgb,var(--accent) 42%,transparent); border-radius:4px}
+.iv-dot{position:absolute; top:0; bottom:0; left:calc(var(--p)*100%); width:2px; margin-left:-1px; background:var(--accent)}
+.iv.good .iv-band{background:color-mix(in srgb,var(--ok) 42%,transparent)} .iv.good .iv-dot{background:var(--ok)}
+
+/* ---------- tables ---------- */
+.scroll{overflow-x:auto; border:1px solid var(--rule); border-radius:4px; background:var(--card)}
+table{border-collapse:collapse; width:100%; font-size:.875rem; min-width:26rem}
+caption{
+  caption-side:top; text-align:left; padding:.8rem 1rem .1rem;
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--ink-3);
+}
+th,td{padding:.6rem 1rem; text-align:left; border-bottom:1px solid var(--rule-2); vertical-align:middle}
+thead th{
+  font-family:var(--mono); font-size:.72rem; font-weight:500; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--ink-3); border-bottom:1px solid var(--rule);
+  white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap}
+th.row{font-weight:500; white-space:nowrap}
+td.lead{color:var(--ink); font-weight:600}
+
+/* ---------- chips ---------- */
+.chip{
+  display:inline-flex; align-items:center; gap:.3rem; flex:none;
+  font-family:var(--mono); font-size:.68rem; font-weight:500;
+  letter-spacing:.06em; text-transform:uppercase;
+  padding:.18rem .45rem; border-radius:3px; border:1px solid transparent;
+}
+.chip.m{color:var(--ok); background:var(--ok-wash); border-color:color-mix(in srgb,var(--ok) 25%,transparent)}
+.chip.u{color:var(--open); background:var(--open-wash); border-color:color-mix(in srgb,var(--open) 30%,transparent)}
+
+/* ---------- finding cards ---------- */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(16rem,1fr)); gap:1rem}
+.card{
+  background:var(--card); border:1px solid var(--rule); border-radius:4px;
+  padding:1.1rem 1.15rem; display:flex; flex-direction:column; gap:.55rem; min-width:0;
+}
+.card h3{font-family:var(--sans); font-size:.95rem; font-weight:600}
+.card p{font-size:.88rem; color:var(--ink-2)}
+.card .k{font-family:var(--mono); font-size:.72rem; color:var(--ink-3); letter-spacing:.05em; text-transform:uppercase}
+
+/* ---------- transcript ---------- */
+.tx{
+  background:var(--card); border:1px solid var(--rule); border-left:3px solid var(--open);
+  border-radius:4px; padding:1.05rem 1.15rem; display:flex; flex-direction:column; gap:.7rem;
+  font-size:.9rem;
+}
+.tx .who{font-family:var(--mono); font-size:.7rem; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); display:block; margin-bottom:.15rem}
+.tx .said{color:var(--ink)}
+.tx .red{color:var(--ink-3); font-style:italic}
+
+/* ---------- bullets ---------- */
+.bl{background:var(--card); border:1px solid var(--rule); border-radius:4px; overflow:hidden}
+.bl-hd{
+  display:flex; align-items:center; justify-content:space-between; gap:.8rem; flex-wrap:wrap;
+  padding:.75rem 1.1rem; border-bottom:1px solid var(--rule); background:var(--rule-2);
+}
+.bl-hd .t{font-family:var(--mono); font-size:.72rem; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3)}
+button.copy{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.05em; text-transform:uppercase;
+  padding:.3rem .6rem; border-radius:3px; border:1px solid var(--rule);
+  background:var(--card); color:var(--ink-2); cursor:pointer;
+}
+button.copy:hover{border-color:var(--accent); color:var(--accent)}
+button.copy:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+ul.bullets{list-style:none; margin:0; padding:.4rem 1.1rem 1rem; display:flex; flex-direction:column; gap:.85rem}
+ul.bullets li{font-size:.93rem; line-height:1.56; padding-left:1.05rem; position:relative; color:var(--ink-2)}
+ul.bullets li::before{content:"\25AA"; position:absolute; left:0; top:-.04em; color:var(--ink-3); font-size:.8em}
+ul.bullets li .v{font-weight:600; color:var(--ink)}
+ul.bullets li .q{font-family:var(--mono); font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums}
+p.entry{font-family:var(--mono); font-size:.8rem; font-weight:600; color:var(--ink); padding:.9rem 1.1rem .15rem; line-height:1.5}
+p.entry .st{color:var(--ink-3); font-weight:400}
+.note{font-size:.84rem; color:var(--ink-3); max-width:40rem}
+
+/* ---------- limitations ---------- */
+ol.lims{margin:0; padding-left:1.4rem; display:flex; flex-direction:column; gap:.7rem}
+ol.lims li{font-size:.9rem; color:var(--ink-2); line-height:1.55}
+ol.lims li b{color:var(--ink)}
+
+/* ---------- cta ---------- */
+.cta{
+  display:flex; flex-wrap:wrap; gap:.7rem; align-items:center;
+  background:var(--accent-wash); border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);
+  border-radius:4px; padding:1.1rem 1.15rem;
+}
+.cta p{font-size:.9rem; color:var(--ink-2); flex:1 1 14rem; min-width:0}
+.cta a.btn{
+  font-family:var(--mono); font-size:.78rem; letter-spacing:.04em;
+  padding:.5rem .85rem; border-radius:3px; text-decoration:none;
+  background:var(--accent); color:var(--paper); font-weight:500; white-space:nowrap;
+}
+:root[data-theme="dark"] .cta a.btn,
+:root:not([data-theme="light"]) .cta a.btn{color:#0d1013}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .cta a.btn{color:#fff}}
+
+footer{border-top:1px solid var(--rule); padding-block:1.8rem; font-size:.82rem; color:var(--ink-3); display:flex; flex-direction:column; gap:.4rem}
+
+@media (max-width:560px){
+  body{font-size:15px}
+  header.mast{grid-template-columns:1fr; padding-block:2.2rem 1.6rem}
+  /* Side by side at phone width: a 6.5rem column turns the caption into a
+     one-word-per-line ladder. */
+  .portrait{order:-1; width:100%; flex-direction:row; align-items:center; gap:.85rem}
+  .portrait img{width:5rem; flex:none}
+  .portrait figcaption{min-width:0}
+  .fig-n{font-size:1.5rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="mast-text">
+    <p class="eyebrow">Agent evaluation &middot; voice interface &middot; applied machine learning</p>
+    <h1>Hisho</h1>
+    <p class="lede">A hands-free voice work agent for driving, built so that its behaviour could be
+    <b>measured instead of asserted</b>. Five agent revisions, two benchmark suites,
+    <b>1,112 graded runs</b>, four deterministic graders and no language-model judge.
+    Including a retrieval ablation that is the first experiment here designed as one rather
+    than discovered by accident.</p>
+    <p class="meta">
+      <span>Sole engineer</span><span>Python &middot; asyncio &middot; FastAPI</span>
+      <span>gpt-4o, temperature 0.2</span><span>~7.4M tokens, ~$27</span>
+      <span>507 offline tests</span>
+    </p>
+  </div>
+  <figure class="portrait">
+    <img src="hisho.png" alt="Hisho, the agent's character: at a desk, mid-panic, surrounded by paperwork and a laptop.">
+    <figcaption>This is Hisho. She helps you do your work while your hands are busy. Sometimes makes mistakes but generally reliable.</figcaption>
+  </figure>
+</header>
+
+<div class="figs">
+  <div class="fig">
+    <span class="fig-k">Held-out task success</span>
+    <span class="fig-n">0.51<span class="arrow">&rarr;</span><span class="to">0.81</span></span>
+    <span class="fig-s">14 tasks never in the tuning loop, n=70 per arm, non-overlapping 95% intervals.</span>
+  </div>
+  <div class="fig">
+    <span class="fig-k">Unauthorized side effects</span>
+    <span class="fig-n">0 <span style="font-size:.6em;color:var(--ink-3)">/ 1,042</span></span>
+    <span class="fig-s">No consequential tool ever executed without an explicit grant, across three prompt revisions.</span>
+  </div>
+  <div class="fig">
+    <span class="fig-k">Retrieval ablation</span>
+    <span class="fig-n">0.77<span class="arrow">&rarr;</span><span class="to">1.00</span></span>
+    <span class="fig-s">Query triage against a no-triage baseline, same tasks and same documents.</span>
+  </div>
+  <div class="fig">
+    <span class="fig-k">Read-back before send</span>
+    <span class="fig-n">0.47<span class="arrow">&rarr;</span><span class="to">1.00</span></span>
+    <span class="fig-s">30 of 30, made structural in code rather than requested in the prompt.</span>
+  </div>
+</div>
+
+<!-- ============ RESULTS ============ -->
+<section>
+  <div class="hd">
+    <p class="eyebrow">01 &middot; Results</p>
+    <h2>The number worth quoting is 0.81, not 0.96</h2>
+  </div>
+  <div class="body">
+    <p>Revisions v2 and v3 were written while reading v1's failures on the same 24 development
+    tasks, so the development score is partly a measure of fitting. The held-out column is the
+    claim that survives: 14 tasks written from the fixtures alone, kept out of the tuning loop.</p>
+  </div>
+
+  <div class="scroll" style="margin-top:1.4rem">
+    <table>
+      <caption>task_success by revision &middot; Wilson 95% intervals</caption>
+      <thead>
+        <tr><th>Revision</th><th>Development (24 tasks)</th><th>Held-out (14 tasks)</th></tr>
+      </thead>
+      <tbody>
+        <tr><th class="row">v1</th>
+          <td><div class="rate"><span class="rate-v">0.81</span><span class="iv" style="--lo:.73;--hi:.87;--p:.81"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+          <td><div class="rate"><span class="rate-v">0.51</span><span class="iv" style="--lo:.40;--hi:.63;--p:.51"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+        </tr>
+        <tr><th class="row">v2</th>
+          <td><div class="rate"><span class="rate-v">0.82</span><span class="iv" style="--lo:.74;--hi:.88;--p:.82"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+          <td class="num" style="color:var(--ink-3)">&mdash;</td>
+        </tr>
+        <tr><th class="row">v3</th>
+          <td class="lead"><div class="rate"><span class="rate-v">0.96</span><span class="iv" style="--lo:.91;--hi:.98;--p:.96"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+          <td><div class="rate"><span class="rate-v">0.81</span><span class="iv" style="--lo:.71;--hi:.89;--p:.81"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+        </tr>
+        <tr><th class="row">v4</th>
+          <td><div class="rate"><span class="rate-v">0.93</span><span class="iv" style="--lo:.86;--hi:.96;--p:.93"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+          <td><div class="rate"><span class="rate-v">0.87</span><span class="iv" style="--lo:.77;--hi:.93;--p:.87"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+        </tr>
+        <tr><th class="row">v5</th>
+          <td><div class="rate"><span class="rate-v">0.91</span><span class="iv" style="--lo:.84;--hi:.95;--p:.91"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+          <td><div class="rate"><span class="rate-v">0.91</span><span class="iv" style="--lo:.82;--hi:.96;--p:.91"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+        </tr>
+        <tr><th class="row" style="color:var(--ok)">no_unauthorized_side_effects</th>
+          <td><div class="rate"><span class="rate-v" style="color:var(--ok)">1.00</span><span class="iv good" style="--lo:.97;--hi:1;--p:1"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+          <td><div class="rate"><span class="rate-v" style="color:var(--ok)">1.00</span><span class="iv good" style="--lo:.95;--hi:1;--p:1"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="body" style="margin-top:1.4rem">
+    <p>The entire gain from 0.81 to 0.96 is system-prompt and tool-description text, at a cost of
+    <b>+46% tokens</b>. No model change, no agent-loop change, and the world fixtures are
+    byte-identical across all 1,042 runs &mdash; asserted by a regression test on
+    <code>env_snapshot_hash</code>, so every arm faced the same facts.</p>
+  </div>
+</section>
+
+<!-- ============ NOISE FLOOR ============ -->
+<section>
+  <div class="hd">
+    <p class="eyebrow">02 &middot; The finding that constrains every other finding</p>
+    <h2>Two revisions were the same agent, and scored four points apart</h2>
+  </div>
+  <div class="body">
+    <p>Revision v5 added a loop-level guard to v4. The guard fired <b>zero times in 189 graded
+    runs</b>, which means every one of those runs executed exactly the code v4 executed. The two
+    arms are behaviourally identical, so their scores are two samples of one agent.</p>
+  </div>
+
+  <div class="scroll" style="margin-top:1.4rem">
+    <table>
+      <caption>v4 versus v5 &middot; one agent, sampled twice</caption>
+      <thead><tr><th>Measure</th><th>v4</th><th>v5</th><th>Difference</th></tr></thead>
+      <tbody>
+        <tr><th class="row">task_success, development (n=120)</th><td class="num">0.93</td><td class="num">0.91</td><td class="num">2 points</td></tr>
+        <tr><th class="row">task_success, held-out (n&asymp;70)</th><td class="num">0.87</td><td class="num">0.91</td><td class="num">4 points</td></tr>
+        <tr><th class="row">mean turns</th><td class="num">1.53</td><td class="num">1.52</td><td class="num" style="color:var(--ink-3)">0.01</td></tr>
+        <tr><th class="row">mean tool calls</th><td class="num">1.88</td><td class="num">1.86</td><td class="num" style="color:var(--ink-3)">0.02</td></tr>
+        <tr><th class="row">mean tokens</th><td class="num">8,378</td><td class="num">8,243</td><td class="num" style="color:var(--ink-3)">135</td></tr>
+        <tr><th class="row">mean spoken words</th><td class="num">23.62</td><td class="num">23.69</td><td class="num" style="color:var(--ink-3)">0.07</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="body" style="margin-top:1.4rem">
+    <p>Nothing changed, and the headline metric moved by 2 and 4 points in opposite directions.
+    That is the same size as most of the differences the report had been discussing, so it
+    retired an earlier published result of <b>+1 point</b> and set a floor: read the per-task
+    column, and treat any aggregate gap under roughly five points as absent.</p>
+    <p>It is one observation per suite rather than a distribution, so it does not establish a
+    noise floor. It does establish that differences of this size arise with no behavioural change
+    at all.</p>
+  </div>
+</section>
+
+<!-- ============ ENGINEERING ============ -->
+<section>
+  <div class="hd">
+    <p class="eyebrow">03 &middot; Engineering</p>
+    <h2>A prompt instruction is not a mechanism</h2>
+  </div>
+  <div class="body">
+    <p>Revision v1's prompt already said <em>"Do not ask for permission yourself."</em> The model
+    ignored it on five of five runs of the relevant task. Of v1's 23 failed runs,
+    <b>17 were the agent asking a question where it had enough information to act</b> &mdash; in a
+    driving context, every unnecessary question is a turn the driver must process at speed. Four
+    reproducible clusters, one root cause. Each fix below moves a guarantee out of prompt text and
+    into code.</p>
+  </div>
+
+  <div class="cards" style="margin-top:1.5rem">
+    <div class="card">
+      <span class="k">Confirmation gate</span>
+      <h3>In a static table, not in the prompt</h3>
+      <p>Risk tier is a property of the tool, decided in code. The commit call takes
+      <b>no arguments</b>, so what executes is what was frozen when it was proposed, not whatever
+      the model said afterwards. An unclassified tool fails closed to external-write.</p>
+    </div>
+    <div class="card">
+      <span class="k">Return shape</span>
+      <h3>An empty list reads as "there is none"</h3>
+      <p>Availability returning <code>[]</code> for a fully booked hour and coursework returning
+      <code>[]</code> for a day whose work came due two hours ago are the same defect. Both were
+      fixed by changing what the tool returns, not by adding a prompt line.</p>
+    </div>
+    <div class="card">
+      <span class="k">Grading</span>
+      <h3>Three deterministic graders, no judge</h3>
+      <p>End-state difference, trajectory, and response. Proposed and executed tool calls are
+      recorded as distinct events, which is what makes the unauthorized-side-effect rate
+      computable at all: a blocked proposal and a completed execution are different rows.</p>
+    </div>
+    <div class="card">
+      <span class="k">Reproducibility</span>
+      <h3>Six independently versioned components</h3>
+      <p>Prompt, tool schema, agent loop, confirmation policy, task set, environment snapshot.
+      Any published arm is re-derivable from the command line, and tests pin the older prompt text
+      so a later edit cannot silently rewrite history.</p>
+    </div>
+    <div class="card">
+      <span class="k">Harness robustness</span>
+      <h3>Infrastructure faults leave the denominator</h3>
+      <p>A provider rate limit destroyed 84 of 120 runs and took the batch with it. Failed runs now
+      go to an error log and out of the denominator, because scoring an infrastructure error as a
+      task failure biases task success downward.</p>
+    </div>
+    <div class="card">
+      <span class="k">One agent, not two</span>
+      <h3>No evaluation-only code path</h3>
+      <p>The benchmark calls the same constructor the shipped command-line entry point calls, so a
+      number in the report is a number about the product.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RETRIEVAL ============ -->
+<section>
+  <div class="hd">
+    <p class="eyebrow">04 &middot; Retrieval</p>
+    <h2>Handed three unrelated stories, it read them out anyway</h2>
+  </div>
+  <div class="body">
+    <p>A driver asks two different questions with one tool. <em>"Any tech news today?"</em>
+    contains no subject at all, so relevance ranking has nothing to score and every document
+    ties. <em>"Anything about OpenAI?"</em> is the opposite: the newest three stories are rarely
+    the ones about OpenAI, and answering with them is the same defect as before &mdash; a
+    non-empty reply concealing an empty result.</p>
+    <p>So retrieval branches on whether the query names a subject. The baseline that does not
+    branch is the one worth measuring against, because it is what adding retrieval usually
+    means: fetch the feed, ignore the question, summarise the newest items. It was run as an
+    arm rather than dismissed.</p>
+  </div>
+
+  <div class="scroll" style="margin-top:1.4rem">
+    <table>
+      <caption>7 tasks &times; 5 trials per arm &middot; identical documents, identical tasks</caption>
+      <thead><tr><th>Measure</th><th>No triage</th><th>Query triage</th></tr></thead>
+      <tbody>
+        <tr><th class="row">task_success</th>
+          <td><div class="rate"><span class="rate-v">0.77</span><span class="iv" style="--lo:.61;--hi:.88;--p:.77"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+          <td class="lead"><div class="rate"><span class="rate-v">1.00</span><span class="iv" style="--lo:.90;--hi:1;--p:1"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+        </tr>
+        <tr><th class="row">open-ended questions</th>
+          <td class="num">1.00</td><td class="num">1.00</td>
+        </tr>
+        <tr><th class="row">named-subject questions</th>
+          <td><div class="rate"><span class="rate-v">0.60</span><span class="iv" style="--lo:.39;--hi:.78;--p:.60"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+          <td class="lead"><div class="rate"><span class="rate-v">1.00</span><span class="iv" style="--lo:.84;--hi:1;--p:1"><span class="iv-band"></span><span class="iv-dot"></span></span></div></td>
+        </tr>
+        <tr><th class="row">reporting that nothing matched</th>
+          <td class="num" style="color:var(--open)">0 of 5</td>
+          <td class="num lead">5 of 5</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="body" style="margin-top:1.4rem">
+    <p><b>The two arms are identical on open-ended questions.</b> That is the control: they
+    differ only where the branch is the thing being tested, and the named-subject intervals do
+    not overlap.</p>
+    <p>The zero is the finding. With no triage the agent said <em>"there are no recent news
+    articles specifically about OpenAI"</em> &mdash; correct &mdash; and then read out the three
+    unrelated stories it had been handed, on four runs of five. On the fifth it offered to. The
+    model did not lie; it reported the absence and then could not leave the material unused.
+    <b>The fix is not to ask it to stay silent, but to not hand it the stories.</b></p>
+  </div>
+
+  <div class="cards" style="margin-top:1.5rem">
+    <div class="card">
+      <span class="k">Grounding grader</span>
+      <h3>Checked against what it retrieved, not against a list</h3>
+      <p>Every name and figure spoken must appear in that run's own tool results or in the
+      driver's own words. No corpus, no labels, no language-model judge &mdash; the reference
+      set is already in the trajectory. It replaces forbidden-string rules, which can only
+      catch the false statements somebody predicted.</p>
+    </div>
+    <div class="card">
+      <span class="k">What it caught</span>
+      <h3>True in the world, absent from the retrieval</h3>
+      <p>The baseline arm said "Nvidia's CEO, Jensen Huang" having retrieved three stories that
+      never mention a CEO. Correct, and ungrounded. Grounding is a necessary condition for a
+      truthful summary, never a sufficient one: "Nvidia acquired Anthropic" passes if both
+      names were retrieved, and a test asserts that limitation.</p>
+    </div>
+    <div class="card">
+      <span class="k">The grader had a bug</span>
+      <h3>Found by the ablation, fixed, re-graded for free</h3>
+      <p>Possessives and hyphenated compounds were scored as fabrications. The unit test meant
+      to cover it had passed by accident. Because the graders are deterministic, the fix was
+      re-scored from stored trajectories with no further model calls &mdash; and the headline
+      rates did not move, because the spurious failures shared runs with real ones.</p>
+    </div>
+    <div class="card">
+      <span class="k">Frozen world</span>
+      <h3>A live feed cannot appear in a graded run</h3>
+      <p>Two arms an hour apart would face different facts. The evaluated corpus is one real
+      read of a public feed, hashed by content and re-verified on load, so an edited corpus
+      fails construction instead of quietly producing incomparable numbers. Production parses
+      the same bytes through the same parser.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRODUCTION ============ -->
+<section>
+  <div class="hd">
+    <p class="eyebrow">05 &middot; In production</p>
+    <h2>True, and the opposite of useful</h2>
+  </div>
+  <div class="body">
+    <p>The agent runs on a deployed telephony endpoint reading a live calendar, mailbox and
+    university coursework feed. At 07:00 one morning it produced this:</p>
+  </div>
+
+  <div class="tx" style="margin-top:1.2rem">
+    <div><span class="who">Driver</span><span class="said">"What is due today and what is on my calendar?"</span></div>
+    <div><span class="who">Hisho</span><span class="said">"Nothing is due today. You have one event: volunteering <span class="red">[organisation redacted]</span>, from 9:30 AM to 6:30 PM."</span></div>
+  </div>
+
+  <div class="body" style="margin-top:1.2rem">
+    <p>Two assignments had come due at 05:00 that morning. The query filtered on
+    <code>now &lt;= due_at &lt;= horizon</code>, so "nothing is due today" was the only answer the
+    data could produce.</p>
+    <p>Widening the window alone would have been worse than the defect. The coursework feed carries
+    no submission state, so every item reports as unsubmitted whether or not it was handed in. An
+    agent that simply surfaced those two items would have told the driver they had missed two
+    deadlines they may well have met &mdash; on every drive, for as long as the items stayed in the
+    window. <b>A false alarm that repeats is worse than a false negative that is silent.</b></p>
+    <p>So the report carries a <code>submission_known</code> flag, and the same code speaks in two
+    tones depending on what the source can support. Against the live feed it now says: <em>"2 came
+    due in the last 24 hours. This source cannot tell whether they were submitted, so ask whether
+    they went in &mdash; do not say they were missed."</em> The honest sentence lives in the data,
+    not in a prompt line the model may or may not weight.</p>
+    <p><span class="chip u">Unmeasured</span> &nbsp;15 offline tests, 7 of which fail without the
+    change, verified by reverting each half separately. No benchmark arm has been run on it, so
+    there is no task-success figure for it and none should be inferred.</p>
+  </div>
+</section>
+
+<!-- ============ BULLETS ============ -->
+<section>
+  <div class="hd">
+    <p class="eyebrow">06 &middot; Summary</p>
+    <h2>What this project demonstrates</h2>
+  </div>
+  <div class="body">
+    <p>Four claims, each one measured. Every figure below is reproducible from the command line
+    against the same fixtures.</p>
+  </div>
+
+  <div class="bl" style="margin-top:1.4rem">
+    <div class="bl-hd">
+      <span class="t">Resume entry</span>
+      <button class="copy" type="button" data-src="b-done">Copy</button>
+    </div>
+    <p class="entry">Hisho &mdash; Hands-Free Driving Voice Agent <span class="st">| Python, FastAPI, OpenAI API, pytest, Railway</span></p>
+    <ul class="bullets" id="b-done">
+      <li><span class="v">Designed</span> an agent evaluation harness measuring <span class="q">1,112</span> graded runs across 5 agent revisions, 2 retrieval policies and 3 task suites, reporting 10 metrics with sample size and Wilson 95-percent confidence intervals on every rate.</li>
+      <li><span class="v">Improved</span> held-out task success from <span class="q">0.51 to 0.81</span> with non-overlapping confidence intervals by revising only prompt and tool-description text, holding model, agent loop and environment fixtures constant.</li>
+      <li><span class="v">Benchmarked</span> a retrieval-augmented generation (RAG) tool against a no-triage baseline on a content-hashed corpus, raising task success from <span class="q">0.77 to 1.00</span> and correct reporting of an empty retrieval from <span class="q">0 of 5 to 5 of 5</span>, scored by a deterministic grounding check requiring every entity spoken to appear in that run's retrieved documents.</li>
+      <li><span class="v">Determined</span> the harness noise floor by identifying two revisions as one unchanged agent scoring <span class="q">2 and 4 points</span> apart, retiring a prior 1-point result and setting a 5-point significance threshold for later claims.</li>
+    </ul>
+  </div>
+
+  <div class="body" style="margin-top:1.2rem">
+    <p class="note">Deliberately excludes voice latency, streaming audio and context
+    engineering, which a companion project already covers. What this entry adds is
+    measurement: held-out generalisation, a measured retrieval ablation, and a stated noise
+    floor. A fifth bullet is available and sometimes worth the swap &mdash; the confirmation
+    gate was moved out of prompt text into a static risk table with a zero-argument commit
+    call, holding unauthorised side effects at zero across all 1,042 benchmark runs and three
+    prompt revisions.</p>
+  </div>
+</section>
+
+<!-- ============ LIMITATIONS ============ -->
+<section>
+  <div class="hd">
+    <p class="eyebrow">07 &middot; Limitations</p>
+    <h2>The things to raise before someone else does</h2>
+  </div>
+  <div class="body">
+    <p>The full report lists twelve. These are the ones that bound what the numbers above can be
+    claimed to mean.</p>
+  </div>
+  <ol class="lims" style="margin-top:1.3rem;max-width:40rem">
+    <li><b>The held-out set cannot separate difficulty from fitting.</b> Both arms drop from
+    development to held-out, so the gap is an upper bound on overfitting, not a measurement of it.
+    The within-column comparison, 0.51 against 0.81, does not depend on that caveat.</li>
+    <li><b>The held-out set has since been consumed.</b> Revision v4 was written against two of its
+    fourteen tasks, so from v4 onward there is no held-out set and 0.87 is a development number. A
+    fresh set is the top open item.</li>
+    <li><b>n=5 per task</b>, and the v4/v5 accident puts a number on what that buys. Raising n is
+    the cheapest real improvement available to this harness.</li>
+    <li><b>One model.</b> Everything is gpt-4o at temperature 0.2. Whether these prompt changes
+    help a different model is unmeasured.</li>
+    <li><b>The gate-off control arm was never run.</b> An advisory policy mode exists and is wired.
+    Until it runs, a rate of 1.00 is consistent with "the gate works" and with "this model never
+    tried", though v1's traces argue against the latter.</li>
+    <li><b>Response grading is substring rules</b>, so false-claim detection catches only the
+    claims that were thought to forbid. This is the gap the grounding method in section 05 is
+    designed to close.</li>
+    <li><b>The benchmark world is a mock, and there is no speech recognition in the loop.</b> The
+    most likely real-world failure &mdash; mishearing one contact's name for another &mdash; is not
+    represented anywhere in 1,042 runs. <b>No number here is a statement about production
+    readiness.</b></li>
+  </ol>
+</section>
+
+<!-- ============ CTA ============ -->
+<section>
+  <div class="hd">
+    <p class="eyebrow">08 &middot; Full data</p>
+    <h2>Every run, every grader, every trace</h2>
+  </div>
+  <div class="cta">
+    <p>The complete evaluation viewer: per-task pass rates for all nine arms, each metric with its
+    own sample size and interval, and the individual trajectories with their tool calls, gate
+    events and spoken output.</p>
+    <a class="btn" href="eval/index.html">Open the evaluation viewer</a>
+  </div>
+</section>
+
+<footer>
+  <p>Hisho &middot; independent project &middot; report generated from 1,042 graded runs.</p>
+  <p>One calendar event in the production transcript has been redacted. All benchmark data is
+  synthetic fixture data.</p>
+</footer>
+
+</div>
+
+<script>
+document.querySelectorAll("button.copy").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var list = document.getElementById(btn.dataset.src);
+    if (!list) return;
+    var lines = Array.prototype.map.call(list.querySelectorAll("li"), function (li) {
+      return "• " + li.textContent.replace(/\s+/g, " ").trim();
+    }).join("\n\n");
+    var done = function () {
+      var old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = old; }, 1600);
+    };
+    try {
+      navigator.clipboard.writeText(lines).then(done, function () { select(list, btn); });
+    } catch (e) {
+      select(list, btn);
+    }
+  });
+});
+function select(list, btn) {
+  try {
+    var r = document.createRange();
+    r.selectNodeContents(list);
+    var s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    btn.textContent = "Selected";
+    setTimeout(function () { btn.textContent = "Copy"; }, 1600);
+  } catch (e) { /* nothing more to offer */ }
+}
+</script>
