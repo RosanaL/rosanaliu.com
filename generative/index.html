@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Three Ways to Draw a T-shirt</title>
+  <meta name="description" content="A VAE, a GAN and a diffusion model trained on the same 28×28 clothing images, tuned and compared by FID.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://rosanaliu.com/generative/">
+  <meta property="og:title" content="Three Ways to Draw a T-shirt">
+  <meta property="og:description" content="VAE, GAN and diffusion on Fashion-MNIST. Diffusion reached FID 33.9; the GAN never drew a shoe.">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/icon-32.png">
+  <link rel="apple-touch-icon" href="../assets/icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --ink: #161a2e;
+      --muted: #676b82;
+      --rule: #d9d4c7;
+      --accent: #c93a78;
+      --frame: #161a2e;
+      --win: #1f7a55;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0f1424;
+        --ink: #e6ebf7;
+        --muted: #8890ad;
+        --rule: #263055;
+        --accent: #ff6fae;
+        --frame: #263055;
+        --win: #5fd39d;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0f1424;
+      --ink: #e6ebf7;
+      --muted: #8890ad;
+      --rule: #263055;
+      --accent: #ff6fae;
+      --frame: #263055;
+      --win: #5fd39d;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font: 400 17px/1.6 "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+      padding-block: clamp(32px, 8vh, 80px) 64px;
+      padding-left: max(20px, env(safe-area-inset-left, 0px));
+      padding-right: max(20px, env(safe-area-inset-right, 0px));
+    }
+    main { max-width: 52rem; margin: 0 auto; display: grid; gap: 56px; }
+    a { color: var(--accent); text-underline-offset: .2em; text-decoration-thickness: 1px; }
+    .px { font-family: "DotGothic16", ui-monospace, "SF Mono", Menlo, monospace; }
+    .label { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    p { max-width: 38rem; text-wrap: pretty; }
+    p + p { margin-top: 14px; }
+    .muted { color: var(--muted); }
+    .num { font-variant-numeric: tabular-nums; }
+
+    .back { font-size: .9rem; text-decoration: none; color: var(--muted); }
+    .back:hover { color: var(--accent); }
+
+    header { display: grid; gap: 18px; }
+    h1 { font-size: clamp(2rem, 6vw, 2.8rem); font-weight: 400; line-height: 1.1; text-wrap: balance; }
+    h2 { font-size: 1.5rem; font-weight: 400; line-height: 1.2; text-wrap: balance; }
+    .lede { font-size: 1.08rem; color: var(--muted); }
+    .lede b { color: var(--ink); font-weight: 500; }
+
+    /* the three grids */
+    .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .model { display: grid; gap: 10px; align-content: start; min-width: 0; }
+    .grid {
+      display: block; width: 100%; height: auto; aspect-ratio: 1; border-radius: 4px;
+      border: 1px solid var(--frame); background: #000;
+      image-rendering: pixelated;
+    }
+    .model-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+    .model-name { font-size: 1.15rem; }
+    .fid { font-size: 1.15rem; }
+    .fid small { font-family: "IBM Plex Sans", sans-serif; font-size: .7rem; color: var(--muted); letter-spacing: .06em; margin-right: 4px; }
+    .model.best .fid { color: var(--win); }
+    .model p { font-size: .92rem; color: var(--muted); }
+    .rank { margin-top: 18px; font-size: .92rem; color: var(--muted); }
+
+    section { display: grid; gap: 18px; border-top: 1px solid var(--rule); padding-top: 36px; }
+    .split { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 28px; align-items: start; }
+    figure { display: grid; gap: 8px; min-width: 0; }
+    figcaption { font-size: .82rem; color: var(--muted); }
+    .wide { display: block; width: 100%; height: auto; border-radius: 4px; border: 1px solid var(--frame); }
+    .strip { overflow-x: auto; border-radius: 4px; border: 1px solid var(--frame); background: #000; }
+    .strip img { display: block; width: 100%; height: auto; min-width: 760px; image-rendering: pixelated; }
+
+    .bars { display: grid; gap: 12px; }
+    .bar-row { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) 7.5rem; gap: 12px; align-items: center; font-size: .92rem; }
+    .track { position: relative; height: 10px; }
+    .track::before { content: ""; position: absolute; inset: 4px 0; background: var(--rule); border-radius: 2px; }
+    .seg { position: absolute; top: 2px; height: 6px; background: var(--accent); border-radius: 3px; opacity: .45; }
+    .dot { position: absolute; top: 0; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; }
+    .dot.from { border: 2px solid var(--muted); background: var(--bg); }
+    .dot.to { background: var(--accent); }
+    .bar-vals { text-align: right; color: var(--muted); }
+    .bar-vals b { color: var(--ink); font-weight: 500; }
+    .axis { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) 7.5rem; gap: 12px; font-size: .75rem; color: var(--muted); }
+    .axis span:nth-child(2) { display: flex; justify-content: space-between; }
+
+    ul.notes { padding-left: 1.1em; display: grid; gap: 8px; max-width: 38rem; }
+    footer { border-top: 1px solid var(--rule); padding-top: 20px; font-size: .85rem; color: var(--muted); }
+
+    @media (max-width: 720px) {
+      .trio { grid-template-columns: 1fr; gap: 32px; }
+      .trio .grid { max-width: 22rem; }
+      .split { grid-template-columns: 1fr; }
+      .split .grid { max-width: 18rem; }
+      .bar-row, .axis { grid-template-columns: 5rem minmax(0, 1fr) 6.5rem; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <a class="back" href="/">← rosanaliu.com</a>
+    <div class="label">Generative models · Fashion-MNIST · 28×28 grayscale</div>
+    <h1 class="px">Three ways to draw a T-shirt</h1>
+    <p class="lede">I trained a <b>VAE</b>, a <b>GAN</b> and a <b>diffusion model</b> on the same 60,000 small clothing images, tuned each one, then asked them all for new clothes. They were scored by FID on 2,000 samples each, where lower means closer to real images.</p>
+  </header>
+
+  <div>
+    <div class="trio">
+      <figure class="model best">
+        <div class="model-head"><span class="model-name px">Diffusion</span><span class="fid px num"><small>FID</small>33.9</span></div>
+        <img class="grid" src="img/fashion-diffusion.png" width="362" height="362" alt="A grid of 144 diffusion samples: shirts, trousers, dresses, sneakers, sandals and bags, with visible prints and straps.">
+        <p>The sharpest and the most varied. You can see prints, sandal straps and bag handles.</p>
+      </figure>
+      <figure class="model">
+        <div class="model-head"><span class="model-name px">VAE</span><span class="fid px num"><small>FID</small>59.8</span></div>
+        <img class="grid" src="img/fashion-vae.png" width="362" height="362" alt="A grid of 144 VAE samples covering every clothing class, smooth and without texture.">
+        <p>Every class shows up, but everything looks soft, as if it had been ironed flat.</p>
+      </figure>
+      <figure class="model">
+        <div class="model-head"><span class="model-name px">GAN</span><span class="fid px num"><small>FID</small>124.9</span></div>
+        <img class="grid" src="img/fashion-gan.png" width="362" height="362" alt="A grid of 144 GAN samples: tops, trousers and dresses with speckled noise, and no shoes or bags.">
+        <p>Higher contrast, but speckled. It never drew a single shoe or bag.</p>
+      </figure>
+    </div>
+    <p class="rank">Each grid is 144 random samples from the best version of that model.</p>
+  </div>
+
+  <section>
+    <div class="label">Finding 1</div>
+    <h2 class="px">The GAN that only drew ones</h2>
+    <div class="split">
+      <figure>
+        <img class="grid" src="img/gan-only-ones.png" width="362" height="362" alt="144 GAN samples on handwritten digits. Every one is a clean digit 1.">
+        <figcaption>Learning rate 5e-4, 100 epochs, on handwritten digits.</figcaption>
+      </figure>
+      <div>
+        <p>On handwritten digits, one GAN setting produced a sharp, realistic “1” every time. A digit classifier read all <b class="num">2,000 of 2,000</b> samples as a 1.</p>
+        <p>The same network at a lower learning rate and half the training still drew all ten digits, so the collapse came from training longer and harder. Once the generator finds something that reliably fools the discriminator, it moves everything there. The loss only asks “does this one look real?”, never “did you cover everything?”.</p>
+        <p>The clothing GAN shows a milder version of the same problem. Across all ten settings I tried, it never learned shoes or bags.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="label">Finding 2</div>
+    <h2 class="px">Diffusion has to start from pure noise</h2>
+    <p>A diffusion model learns to undo noise one small step at a time. With the default schedule (100 steps), about <span class="num">60%</span> of the original image is still there at the last step. The model never practised on pure static, but sampling starts from pure static, so it produced strokes that weren’t digits.</p>
+    <figure>
+      <div class="strip"><img src="img/diffusion-reverse-default.png" width="1502" height="242" alt="Eight rows of reverse diffusion from noise to image with the default schedule. The final images are stroke-like shapes, not readable digits."></div>
+      <figcaption>Default schedule. Noise on the left, result on the right: shapes, but not digits.</figcaption>
+    </figure>
+    <p>Any schedule that reaches pure noise fixed this. I used 200 steps with a stronger final noise level, the cheapest of the ones that worked, since sampling time grows with the number of steps.</p>
+    <figure>
+      <div class="strip"><img src="img/diffusion-reverse.png" width="1502" height="242" alt="Eight rows of reverse diffusion with the tuned schedule. Each row resolves from static into a clear digit."></div>
+      <figcaption>Tuned schedule, after 10 epochs. Each row turns from static into a clear digit.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="label">Finding 3</div>
+    <h2 class="px">A VAE’s β is a dial between sharp and organised</h2>
+    <figure>
+      <img class="wide" src="img/vae-beta.png" width="1350" height="486" alt="Three grids of VAE digit samples at β 0.002, 0.03 and 0.1. The first is sharp but scrambled, the middle is readable, and the last is the same blurry digit repeated.">
+      <figcaption>Left to right: β = 0.002, 0.03, 0.1. The percentage is 10-shot nearest-neighbour accuracy on the learned codes.</figcaption>
+    </figure>
+    <p>β sets how hard the VAE is pushed to keep its internal codes tidy. Too little and the strokes are crisp but scrambled, because random codes fall into gaps the decoder never saw. Too much and the samples collapse into the same few blurry digits. The middle setting gave the most readable samples <em>and</em> the best codes for telling digits apart from ten examples each (<span class="num">74.9%</span>).</p>
+    <p>Even so, the best VAE for drawing clothes and the best VAE for recognising digits turned out to be different models.</p>
+  </section>
+
+  <section>
+    <div class="label">Tuning</div>
+    <h2 class="px">How far tuning moved each model</h2>
+    <div class="bars" role="list">
+      <div class="bar-row" role="listitem">
+        <span class="px">Diffusion</span>
+        <span class="track"><span class="seg" style="left:22.6%;width:9%"></span><span class="dot from" style="left:31.6%"></span><span class="dot to" style="left:22.6%"></span></span>
+        <span class="bar-vals num">47.4 → <b>33.9</b></span>
+      </div>
+      <div class="bar-row" role="listitem">
+        <span class="px">VAE</span>
+        <span class="track"><span class="seg" style="left:39.9%;width:29.6%"></span><span class="dot from" style="left:69.5%"></span><span class="dot to" style="left:39.9%"></span></span>
+        <span class="bar-vals num">104.2 → <b>59.8</b></span>
+      </div>
+      <div class="bar-row" role="listitem">
+        <span class="px">GAN</span>
+        <span class="track"><span class="seg" style="left:83.3%;width:12.9%"></span><span class="dot from" style="left:96.2%"></span><span class="dot to" style="left:83.3%"></span></span>
+        <span class="bar-vals num">144.3 → <b>124.9</b></span>
+      </div>
+      <div class="axis" aria-hidden="true"><span></span><span><span>0</span><span>FID (lower is better)</span><span>150</span></span><span></span></div>
+    </div>
+    <ul class="notes">
+      <li><b>VAE:</b> switching the pixel loss from squared error to absolute error gave the biggest jump, mostly by adding contrast. A wider network did the rest.</li>
+      <li><b>GAN:</b> LeakyReLU, a higher learning rate and longer training each helped a little. A bigger network or noise vector barely mattered.</li>
+      <li><b>Diffusion:</b> mostly more epochs, at a gentle learning rate.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="label">Caveat</div>
+    <h2 class="px">Is FID fair to these models?</h2>
+    <p>Mostly. It agreed with my eyes, and it rose when a model dropped classes. But it judges 28×28 grayscale clothes with features from a network trained on colour photos, it likes contrast, and it rolls sharpness and variety into one number. The VAE gained a lot just by getting punchier. These scores are only comparable to each other, measured the same way on 2,000 samples.</p>
+  </section>
+
+  <footer>
+    Made for a graduate deep learning course in autumn 2026. The code stays private under the course’s rules.
+  </footer>
+</main>
+</body>
+</html>

@@ -58,6 +58,7 @@
     .intro { display: grid; gap: 14px; max-width: 36rem; color: var(--muted); text-wrap: pretty; }
     .intro p:first-child { color: var(--ink); }
     .intro cite { font-style: italic; color: var(--ink); }
+    .intro .notice { font-size: .82rem; padding-top: 10px; border-top: 1px solid var(--rule); }
 
     /* Filters on the left, the list on the right. */
     .board { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: 40px; align-items: start; }
@@ -104,6 +105,7 @@
       padding: 4px 6px; border: 1px solid var(--rule);
     }
     .tag.on { color: var(--accent); border-color: var(--accent); }
+    .date { order: 1; margin-left: auto; font-size: .78rem; line-height: 1; color: var(--muted); padding: 4px 0; }
 
     footer { color: var(--muted); font-size: .8rem; }
 
@@ -127,11 +129,12 @@
     <header>
       <h1 class="px">Rosana Liu</h1>
       <div class="intro">
-        <p>Hi! I’m Rosana. With a background in applied mathematics, I am currently pursuing a Master’s degree in Computer Science, focusing on machine learning and artificial intelligence.</p>
+        <p>Hi! I’m Rosana. With a background in applied mathematics, I am currently pursuing a Master’s degree in Computer Science, focusing on machine learning.</p>
         <p>I am deeply passionate about exploring the intersection of AI and consumer products. I believe that AI agents should possess distinct personalities, and I am currently working on several personal projects centered around this concept. I love experimenting with new ideas and transforming them into tangible products.</p>
         <p>Beyond the world of tech, I enjoy golf, chess, anime, Sudoku, Kuromi, video games—and anything else that involves strategy, creativity, or an intellectual challenge.</p>
         <p>I have an innate curiosity about how things work—whether it’s the mechanics of a machine learning model, the intricacies of a chess game, or the nuances of a golf swing. I enjoy reading about a wide variety of subjects; my favorite book is <cite>Gödel, Escher, Bach</cite>. I often find myself falling down a “rabbit hole,” completely losing track of time.</p>
         <p>Looking forward to making new friends! ^_^</p>
+        <p class="notice">This site is a record of my past work. Please don’t share or reuse the experimental results shown here without asking me first.</p>
       </div>
     </header>
 
@@ -140,7 +143,7 @@
         <h2 id="h-filter" class="px">Filter</h2>
         <ul>
           <li><button class="filter px" type="button" data-filter="all" aria-pressed="true"><span class="label">All</span><span class="count"></span></button></li>
-          <li><button class="filter px" type="button" data-filter="agent" aria-pressed="false"><span class="label">AI Agent</span><span class="count"></span></button></li>
+          <li><button class="filter px" type="button" data-filter="agent" aria-pressed="false"><span class="label">LLM Agent</span><span class="count"></span></button></li>
           <li><button class="filter px" type="button" data-filter="ml" aria-pressed="false"><span class="label">Machine Learning</span><span class="count"></span></button></li>
           <li><button class="filter px" type="button" data-filter="product" aria-pressed="false"><span class="label">Product</span><span class="count"></span></button></li>
         </ul>
@@ -150,13 +153,15 @@
         <section aria-labelledby="h-projects">
           <h2 id="h-projects" class="px">Projects</h2>
           <ul class="list" id="projects">
+            <li data-tags="ml"><a class="link" href="/generative/"><span class="name">VAE vs GAN vs Diffusion</span><span class="where px">rosanaliu.com/generative</span><span class="note">Three generative models drawing the same small clothing images. Diffusion scored best (FID 33.9), and the GAN never learned to draw a shoe.</span><span class="tags"><time class="date px" datetime="2026-11-16">2026.11.16</time></span></a></li>
+            <li data-tags="ml"><a class="link" href="https://ruoran-liu-neural-translation.rosanaliu1020.chatgpt.site/" target="_blank" rel="noopener"><span class="name">Neural Machine Translation</span><span class="where px">Report &amp; examples</span><span class="note">Six German-to-English models, from a plain RNN to a full Transformer. Attention cut the RNN’s validation perplexity by 61%.</span><span class="tags"><time class="date px" datetime="2026-11-13">2026.11.13</time></span></a></li>
             <li data-tags="agent product"><a class="link" href="https://www.heychirpi.com" target="_blank" rel="noopener"><span class="name">Chirpi</span><span class="where px">heychirpi.com</span><span class="note">Less planning. More playing.</span><span class="tags"></span></a></li>
+            <li data-tags="agent product"><a class="link" href="https://app.heychirpi.com" target="_blank" rel="noopener"><span class="name">Chirpi – Golf Range Assistant</span><span class="where px">app.heychirpi.com</span><span class="note">A little bird that keeps you company at the driving range: a point for every swing, and a video of each one.</span><span class="tags"></span></a></li>
             <li data-tags="ml"><a class="link" href="https://voice-model-golf.rosanaliu1020.chatgpt.site/#report" target="_blank" rel="noopener"><span class="name">Golf Assistant Voice Model</span><span class="where px">Demo &amp; results</span><span class="note">Golf-domain speech recognition, the model layer behind Chirpi. Whisper Small on Apple Silicon, tested across 16 noise conditions.</span><span class="tags"></span></a></li>
             <li data-tags="agent ml"><a class="link" href="/hisho/"><span class="name">Hisho</span><span class="where px">rosanaliu.com/hisho</span><span class="note">A hands-free voice work agent for driving, built so its behaviour could be measured. Held-out task success went from 0.51 to 0.81, with no unauthorized actions in 1,042 runs.</span><span class="tags"></span></a></li>
             <li data-tags="product"><a class="link" href="https://kneadit.ai" target="_blank" rel="noopener"><span class="name">Kneadit</span><span class="where px">kneadit.ai</span><span class="note">Helps local bakeries and cafés sell what's left instead of binning it. I built the inventory forecasting algorithm.</span><span class="tags"></span></a></li>
             <li data-tags="ml"><a class="link" href="https://birdie-demo-production.up.railway.app" target="_blank" rel="noopener"><span class="name">Birdie Vision</span><span class="where px">birdie-demo-production.up.railway.app</span><span class="note">Upload a golf video and it finds the ball and traces its flight.</span><span class="tags"></span></a></li>
             <li data-tags="ml"><a class="link" href="https://wallet-orb.vercel.app" target="_blank" rel="noopener"><span class="name">Wallet Orb</span><span class="where px">wallet-orb.vercel.app</span><span class="note">Person or bot? Ask the orb.</span><span class="tags"></span></a></li>
-            <li data-tags="ml"><a class="link" href="https://ruoran-liu-neural-translation.rosanaliu1020.chatgpt.site/" target="_blank" rel="noopener"><span class="name">Neural Machine Translation</span><span class="where px">Report &amp; examples</span><span class="note">Six German-to-English models, from a plain RNN to a full Transformer. Attention cut the RNN’s validation perplexity by 61%.</span><span class="tags"></span></a></li>
             <li data-tags="product"><a class="link" href="https://rosanafixes.it" target="_blank" rel="noopener"><span class="name">Rosana Fixes It</span><span class="where px">rosanafixes.it</span><span class="note">I fix the tech, so you can run the business.</span><span class="tags"></span></a></li>
           </ul>
         </section>
@@ -178,7 +183,7 @@
   <script>
     /* Each project carries its tags in data-tags; the left column filters by one tag at a time. */
     (() => {
-      const LABEL = { agent: "AI Agent", ml: "Machine Learning", product: "Product" };
+      const LABEL = { agent: "LLM Agent", ml: "Machine Learning", product: "Product" };
       const items = [...document.querySelectorAll("#projects > li")];
       const buttons = [...document.querySelectorAll(".filter")];
       const tagsOf = (li) => li.dataset.tags.split(/\s+/).filter(Boolean);
